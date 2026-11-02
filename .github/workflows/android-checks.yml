@@ -32,45 +32,51 @@ jobs:
         run: |
           python3 tests/CheckScopeTest.py
           python3 tests/RemoteConfigChecksTest.py
-          echo "config_only=$(python3 tests/CheckScope.py)" >> "$GITHUB_OUTPUT"
+          echo "scope=$(python3 tests/CheckScope.py)" >> "$GITHUB_OUTPUT"
       - name: Validate configuration-only change
-        if: steps.scope.outputs.config_only == 'true'
+        if: steps.scope.outputs.scope == 'config'
         run: |
           python3 tests/RemoteConfigChecks.py
           python3 tests/WebsiteChecks.py
           node tests/WebsiteDownloadChecks.cjs
+      - name: Validate documentation-only change
+        if: steps.scope.outputs.scope == 'docs'
+        run: git diff --check "$BASE_SHA" "$HEAD_SHA" --
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
       - uses: actions/setup-java@v4
-        if: steps.scope.outputs.config_only != 'true'
+        if: steps.scope.outputs.scope != 'config' && steps.scope.outputs.scope != 'docs'
         with:
           distribution: temurin
           java-version: '17'
           cache: gradle
       - uses: android-actions/setup-android@v4
-        if: steps.scope.outputs.config_only != 'true'
+        if: steps.scope.outputs.scope != 'config' && steps.scope.outputs.scope != 'docs'
       - name: Install Android SDK
-        if: steps.scope.outputs.config_only != 'true'
+        if: steps.scope.outputs.scope != 'config' && steps.scope.outputs.scope != 'docs'
         run: sdkmanager 'platforms;android-34' 'build-tools;34.0.0'
       - name: Business regression checks
-        if: steps.scope.outputs.config_only != 'true'
+        if: steps.scope.outputs.scope != 'config' && steps.scope.outputs.scope != 'docs'
         run: python3 tests/run_checks.py
       - name: Release validation tests
-        if: steps.scope.outputs.config_only != 'true'
+        if: steps.scope.outputs.scope != 'config' && steps.scope.outputs.scope != 'docs'
         run: |
           python3 tests/ReleaseChecksTest.py
           python3 tests/OcrPluginChecksTest.py
       - name: Signing boundaries without official secrets
-        if: steps.scope.outputs.config_only != 'true'
+        if: steps.scope.outputs.scope != 'config' && steps.scope.outputs.scope != 'docs'
         run: python3 tests/SigningChecks.py
       - name: Build and test lite QA and OCR plugin
-        if: steps.scope.outputs.config_only != 'true'
+        if: steps.scope.outputs.scope != 'config' && steps.scope.outputs.scope != 'docs'
         run: |
           sh gradlew --no-daemon -PqaBuild :app:assembleLiteDebug :ocr-plugin:assembleDebug :app:assembleLiteDebugAndroidTest :ocr-plugin:assembleDebugAndroidTest :app:testLiteDebugUnitTest :app:lintLiteDebug :ocr-plugin:lintDebug :ocr-engine:lintDebug
       - name: Verify OCR plugin isolation
-        if: steps.scope.outputs.config_only != 'true'
+        if: steps.scope.outputs.scope != 'config' && steps.scope.outputs.scope != 'docs'
         run: |
           python3 tests/OcrPluginChecks.py --host app/build/outputs/apk/lite/debug/app-lite-debug.apk --plugin ocr-plugin/build/outputs/apk/debug/ocr-plugin-debug.apk
       - name: Upload QA APKs
-        if: steps.scope.outputs.config_only != 'true'
+        if: steps.scope.outputs.scope != 'config' && steps.scope.outputs.scope != 'docs'
         uses: actions/upload-artifact@v4
         with:
           name: courselens-qa-${{ github.sha }}
@@ -80,7 +86,7 @@ jobs:
           if-no-files-found: error
           retention-days: 7
       - name: Upload test APK and lint reports
-        if: always() && steps.scope.outputs.config_only != 'true'
+        if: always() && steps.scope.outputs.scope != 'config' && steps.scope.outputs.scope != 'docs'
         uses: actions/upload-artifact@v4
         with:
           name: courselens-checks-${{ github.sha }}

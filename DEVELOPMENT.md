@@ -163,7 +163,7 @@ try {
 
 ## GitHub Actions
 
-- `Android checks`：必需检查始终名为 `checks`。仅当 PR 的差异严格只有 `remote/config.json` 时，运行配置和网站验证；main push、空差异、无法判断、混合改动和手动运行均执行完整 Android 检查。完整检查缓存 Gradle 依赖，验证无密钥签名边界、QA 主/测试 APK、单元测试和 Lint；不执行设备测试。
+- `Android checks`：必需检查始终名为 `checks`。PR 仅修改根目录或 `docs/` 下的 Markdown 时运行文档差异检查；仅修改 `remote/config.json` 时运行配置和网站验证。main push、空差异、无法判断、其他文件或混合改动均执行完整 Android 检查。完整检查缓存 Gradle 依赖，验证无密钥签名边界、QA 主/测试 APK、单元测试和 Lint；不执行设备测试。
 - `Remote configuration`：PR 只验证配置，main 上相关文件变化后部署现有 Pages；不构建或发布 APK。
 - `Prepare signed release`：仅手动选择 main，拒绝已存在标签及不递增的 versionCode，构建与验证正式 APK，生成校验文件和来源元数据，创建**草稿** Release。
 
