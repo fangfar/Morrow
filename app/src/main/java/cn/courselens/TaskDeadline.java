@@ -10,6 +10,11 @@ final class TaskDeadline {
   Matcher m=DATE.matcher(value.trim());if(!m.matches())return null;
   try{return LocalDateTime.of(Integer.parseInt(m.group(1)),Integer.parseInt(m.group(2)),Integer.parseInt(m.group(3)),Integer.parseInt(m.group(4)),Integer.parseInt(m.group(5)),m.group(6)==null?0:Integer.parseInt(m.group(6)));}catch(DateTimeException e){return null;}
  }
+ static LocalDateTime parseForCountdown(String value,LocalDateTime now){
+  LocalDateTime full=parse(value);if(full!=null)return full;
+  String display=display(value);if(display.equals("截止时间未知")||display.equals("未提供截止时间"))return null;
+  return parse(now.getYear()+"-"+display);
+ }
  static String display(String value){
   if(value.equals("未提供截止时间"))return value;
   LocalDateTime full=parse(value);if(full!=null)return full.format(java.time.format.DateTimeFormatter.ofPattern("MM-dd HH:mm"));
@@ -18,7 +23,7 @@ final class TaskDeadline {
   return "截止时间未知";
  }
  static java.util.List<ChaoxingClient.Work> sorted(java.util.List<ChaoxingClient.Work> source){
-  java.util.List<ChaoxingClient.Work> result=new java.util.ArrayList<>(source);result.sort(java.util.Comparator.comparing((ChaoxingClient.Work w)->parse(w.deadline),java.util.Comparator.nullsLast(java.util.Comparator.naturalOrder())));return result;
+  LocalDateTime now=LocalDateTime.now();java.util.List<ChaoxingClient.Work> result=new java.util.ArrayList<>(source);result.sort(java.util.Comparator.comparing((ChaoxingClient.Work w)->parseForCountdown(w.deadline,now),java.util.Comparator.nullsLast(java.util.Comparator.naturalOrder())));return result;
  }
  static String countdown(LocalDateTime due,LocalDateTime now){
   long minutes=Duration.between(now,due).toMinutes();if(minutes<60)return relative(due,now);long hours=minutes/60;return hours>=24?"还剩 "+hours/24+" 天 "+hours%24+" 小时":"还剩 "+hours+" 小时";
