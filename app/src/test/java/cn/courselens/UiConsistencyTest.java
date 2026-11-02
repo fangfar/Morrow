@@ -53,6 +53,17 @@ public class UiConsistencyTest {
    callInstanceMethod(a,"edit");settle();View emptyAdd=root(a).findViewWithTag("manage-empty-add");assertNotNull(emptyAdd);emptyAdd.performClick();settle();assertEquals("添加课程",((View)getField(a,"root")).getTag());
   }
  }
+ @Test public void longTimetableNameKeepsHeaderControlsInPlace()throws Exception{
+  RuntimeEnvironment.setQualifiers("w320dp-h640dp-notnight");RuntimeEnvironment.setFontScale(1f);
+  try(ActivityController<MainActivity> controller=Robolectric.buildActivity(MainActivity.class).setup()){
+   MainActivity a=controller.get();Timetables.add(a,"超长合成课表名称超长合成课表名称超长合成课表名称","squ",ClassTimes.DEFAULT,"2026-08-31");callInstanceMethod(a,"reloadTimetable");settle();View date=root(a).findViewWithTag("home-date"),button=root(a).findViewWithTag("timetable-settings");assertSame(date.getParent(),button.getParent());assertEquals(1,((TextView)((ViewGroup)date).getChildAt(1)).getMaxLines());
+  }
+ }
+ @Test public void emptyWidgetTextIsCenteredInTheSurface(){
+  try(ActivityController<MainActivity> controller=Robolectric.buildActivity(MainActivity.class).setup()){
+   MainActivity a=controller.get();a.getPreferences(0).edit().putString("courses","").commit();View widget=CourseWidget.views(a,0,LocalDateTime.of(2026,10,26,12,0)).apply(a,new FrameLayout(a));int size=(int)(148*a.getResources().getDisplayMetrics().density);widget.measure(View.MeasureSpec.makeMeasureSpec(size,View.MeasureSpec.EXACTLY),View.MeasureSpec.makeMeasureSpec(size,View.MeasureSpec.EXACTLY));widget.layout(0,0,size,size);View surface=widget.findViewById(R.id.widget_surface),title=widget.findViewById(R.id.widget_empty_title);Rect bounds=new Rect();title.getDrawingRect(bounds);((ViewGroup)surface).offsetDescendantRectToMyCoords(title,bounds);assertTrue(Math.abs(surface.getHeight()/2-bounds.centerY())<=2*a.getResources().getDisplayMetrics().density);
+  }
+ }
  @Test public void courseFieldsGrowWithLargeText()throws Exception{
   RuntimeEnvironment.setQualifiers("w320dp-h640dp-notnight");RuntimeEnvironment.setFontScale(2f);
   try(ActivityController<MainActivity> controller=Robolectric.buildActivity(MainActivity.class).setup()){

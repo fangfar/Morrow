@@ -12,6 +12,8 @@ public class TaskDeadlineTest {
   assertEquals("截止时间未知",TaskDeadline.display("02-30 10:26"));
   assertEquals("截止时间未知",TaskDeadline.display("10-29 25:26"));
   assertNull(TaskDeadline.parse("10-29 10:26"));
+  assertEquals(LocalDateTime.of(2026,10,29,10,26),TaskDeadline.parseForCountdown("10-29 10:26",LocalDateTime.of(2026,1,1,0,0)));
+  assertNull(TaskDeadline.parseForCountdown("02-29 10:26",LocalDateTime.of(2027,1,1,0,0)));
  }
  @Test public void acceptsPlatformFormatsWithoutGuessingYear(){
   assertEquals(LocalDateTime.of(2026,10,23,9,5),TaskDeadline.parse("2026年10月23日 9:05"));
@@ -26,7 +28,7 @@ public class TaskDeadlineTest {
   assertEquals("截止时间未知",TaskDeadline.relative(null,now));
  }
  @Test public void sortingKeepsUnknownDatesLastWithoutChangingSource(){
-  ChaoxingClient.Work unknown=new ChaoxingClient.Work("A","unknown","未完成","");unknown.deadline="10-23 12:00";
+  ChaoxingClient.Work unknown=new ChaoxingClient.Work("A","unknown","未完成","");unknown.deadline="截止时间未知";
   ChaoxingClient.Work later=new ChaoxingClient.Work("A","later","未完成","");later.deadline="2026-10-25 12:00";
   ChaoxingClient.Work earlier=new ChaoxingClient.Work("B","earlier","未完成","");earlier.deadline="2026-10-23 12:00";
   java.util.List<ChaoxingClient.Work> source=java.util.Arrays.asList(unknown,later,earlier),sorted=TaskDeadline.sorted(source);
