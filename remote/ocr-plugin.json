@@ -3,8 +3,8 @@
   "protocol": 1,
   "enabled": true,
   "packageName": "cn.courselens.ocr",
-  "versionCode": 1,
-  "bytes": 46343464,
-  "sha256": "cf87ece6d7596a44d547128c15b4dbbf6a3ce514c94b2a6fea153fe09583835d",
-  "url": "https://github.com/fangfar/Morrow/releases/download/v2.7.7/Morrow-OCR-1.0.0-vc1.apk"
+  "versionCode": 2,
+  "bytes": 46343576,
+  "sha256": "f591579355bc7f30d604e9bbfecbe2ae30bb7025d805353d21f61347d30f5c0e",
+  "url": "https://github.com/fangfar/Morrow/releases/download/v3.0.0/Morrow-OCR-1.0.1.apk"
 }

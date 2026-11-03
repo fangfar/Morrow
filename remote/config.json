@@ -10,15 +10,15 @@
     }
   ],
   "android": {
-    "versionCode": 20,
-    "versionName": "2.7.8",
+    "versionCode": 21,
+    "versionName": "3.0.0",
     "forcePrompt": false,
     "promptTitle": "",
     "promptMessage": "",
-    "changelog": "空课表与空任务优先引导登录，优化设置及课表切换。\n新增快递恢复，支持找回本次更新后删除的快递。",
-    "apkUrl": "https://github.com/fangfar/Morrow/releases/download/v2.7.8/Morrow-2.7.8-full-vc20.apk",
-    "liteApkUrl": "https://github.com/fangfar/Morrow/releases/download/v2.7.8/Morrow-2.7.8-lite-vc20.apk",
-    "fullApkUrl": "https://github.com/fangfar/Morrow/releases/download/v2.7.8/Morrow-2.7.8-full-vc20.apk",
+    "changelog": "优化课程小组件与课程添加，支持为同一课程设置多个上课时段。\n优化快递通知、取件操作和图片识别流程。\n图片识别改为安装可选 OCR 插件，按需使用。\n修复任务倒计时和课表布局问题。",
+    "apkUrl": "https://github.com/fangfar/Morrow/releases/download/v3.0.0/Morrow-3.0.0-lite.apk",
+    "liteApkUrl": "https://github.com/fangfar/Morrow/releases/download/v3.0.0/Morrow-3.0.0-lite.apk",
+    "fullApkUrl": "https://github.com/fangfar/Morrow/releases/download/v3.0.0/Morrow-3.0.0-lite.apk",
     "diskUrl": "https://pan.baidu.com/s/5Q7q-93RIXFczWfL1i3cvQg"
   },
   "repositoryUrl": "https://github.com/fangfar/Morrow"
