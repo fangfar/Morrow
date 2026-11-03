@@ -66,7 +66,7 @@ def main():
         uri = urllib.parse.urlsplit(args.release_base_url)
         assert uri.scheme == 'https' and uri.hostname and not uri.username and not uri.password and uri.port in (None, 443), 'Invalid HTTPS download URL'
         code, name = re.search(r"versionCode='(\d+)' versionName='([^']+)'", badging).groups()
-        filename = f'Morrow-OCR-{name}-vc{code}.apk'
+        filename = f'Morrow-OCR-{name}.apk'
         url = args.release_base_url.rstrip('/') + '/' + filename
         output = ROOT / 'app/build/release'
         output.mkdir(parents=True, exist_ok=True)
