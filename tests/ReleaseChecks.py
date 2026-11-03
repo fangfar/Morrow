@@ -79,7 +79,7 @@ def main():
         check_edition(archive.namelist(), args.edition)
     output = ROOT / "app/build/release"
     output.mkdir(parents=True, exist_ok=True)
-    filename = f"Morrow-{name}-{args.edition}-vc{code}.apk"
+    filename = f"Morrow-{name}-{args.edition}.apk"
     shutil.copyfile(args.apk, output / filename)
     digest = hashlib.sha256((output / filename).read_bytes()).hexdigest()
     with (output / "SHA256SUMS").open("w" if args.edition == "lite" else "a", encoding="utf-8") as checksums:
