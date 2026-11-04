@@ -15,6 +15,12 @@ import static org.robolectric.util.ReflectionHelpers.*;
 
 @RunWith(RobolectricTestRunner.class) @Config(sdk=34)
 public class DeepSeekAssistantTest {
+ @Test public void chatComposerStaysOutsideConversationAndMenuContainsActions()throws Exception{
+  try(ActivityController<MainActivity> c=Robolectric.buildActivity(MainActivity.class).setup()){
+   MainActivity a=c.get();callInstanceMethod(a,"aiAssistant");LinearLayout page=getField(a,"root");View input=page.findViewWithTag("ai-message"),send=page.findViewWithTag("ai-send");assertNotNull(input);assertNotNull(send);assertSame(input.getParent(),send.getParent());assertSame(page,input.getParent().getParent());assertTrue(page.getChildAt(1) instanceof ScrollView);
+   page.findViewWithTag("ai-menu").performClick();View decor=a.findViewById(android.R.id.content);assertNotNull(decor.findViewWithTag("ai-settings"));assertNotNull(decor.findViewWithTag("ai-exams"));
+  }
+ }
  @Test public void examAppearsOnCorrectDayAndCanBeOpened()throws Exception{
   try(ActivityController<MainActivity> c=Robolectric.buildActivity(MainActivity.class).setup()){
    MainActivity a=c.get();setField(a,"term","2026-08-31");a.getPreferences(0).edit().putString("aiExams","[{\"name\":\"英语\",\"date\":\"2026-09-04\",\"time\":\"\",\"room\":\"\"}]").commit();LinearLayout days=new LinearLayout(a);for(int i=0;i<8;i++)days.addView(new TextView(a));
@@ -24,7 +30,7 @@ public class DeepSeekAssistantTest {
  }
  @Test public void confirmationAndStaleDataProtectRecords()throws Exception{
   try(ActivityController<MainActivity> c=Robolectric.buildActivity(MainActivity.class).setup()){
-   MainActivity a=c.get();callInstanceMethod(a,"aiAssistant");View root=a.findViewById(android.R.id.content);assertNotNull(root.findViewWithTag("ai-message"));assertNotNull(root.findViewWithTag("ai-exams"));
+   MainActivity a=c.get();callInstanceMethod(a,"aiAssistant");View root=a.findViewById(android.R.id.content);assertNotNull(root.findViewWithTag("ai-message"));assertNotNull(root.findViewWithTag("ai-menu"));
    String courses="1|1|2|高数|A101|1-16",exams="[]",term=getField(a,"term"),adjustments=getField(a,"adjustments");ClassTimes times=getField(a,"classTimes");setField(a,"data",courses);String id=Timetables.active(a);int screen=getField(a,"screen");TextView status=new TextView(a);LinearLayout history=new LinearLayout(a);
    DeepSeekPlan plan=DeepSeekPlan.build(new JSONObject("{\"type\":\"delete_course\",\"index\":1}"),courses,exams,times);
    callInstanceMethod(a,"rememberAiResponse",ClassParameter.from(String.class,"删除高数"),ClassParameter.from(String.class,"请核对要删除的课程"),ClassParameter.from(DeepSeekPlan.class,plan));assertTrue(last(a).contains("请核对要删除的课程")&&last(a).contains("高数")&&last(a).contains("尚未执行"));
