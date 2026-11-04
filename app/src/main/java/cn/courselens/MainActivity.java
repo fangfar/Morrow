@@ -34,7 +34,7 @@ public class MainActivity extends Activity {
  private HomePage homePage;
  private TaskPage taskPage;private Bundle taskState;private ParcelPage parcelPage;private Bundle parcelState;private boolean tasksVisible,parcelsVisible,switchingPrimaryTab,pageBackwards;
  private FrameLayout windowContent;private AppNavigation bottomNavigation;private SideNavigation sideNavigation;
- private LinearLayout settingsPage;private int settingsScrollY;private boolean settingsFromParcel,settingsFromParcelActivity;
+ private Runnable aiOrigin;private LinearLayout settingsPage;private int settingsScrollY;private boolean settingsFromParcel,settingsFromParcelActivity;
  private ScrollView timetableScroll;private int timetableScrollY;
  private float backPageX;
  private final PageMotion pageMotion=new PageMotion();private Object systemBack;private boolean backRegistered;
@@ -345,6 +345,7 @@ public class MainActivity extends Activity {
   }
   LinearLayout body=secondary("设置","",this::closeSettings);
   LinearLayout timetable=settingsGroup(body,"课表");
+  option(timetable,R.drawable.ic_notes,"AI 助手","DeepSeek",()->{aiOrigin=this::menu;aiAssistant();}).setTag("ai-assistant");
   option(timetable,R.drawable.ic_calendar,"课表管理","",this::timetableManagement).setTag("timetable-management");
   option(timetable,R.drawable.ic_calendar,"开学日期",term,this::termPicker).setTag("settings-term");
   option(timetable,R.drawable.ic_calendar,"作息时间","",this::timesForm).setTag("settings-times");
@@ -366,7 +367,8 @@ public class MainActivity extends Activity {
  }
  private void dataManagement(){
   LinearLayout body=secondary("数据管理","",this::menu);
-  option(settingsGroup(body,"课表"),R.drawable.ic_calendar,"清空当前课表","清空课程、备注和单次调整，退出学校账号",()->confirmClear()).setTag("clear-timetable");
+  LinearLayout timetableData=settingsGroup(body,"课表");option(timetableData,R.drawable.ic_notes,"清空本课表考试记录","删除手动保存的考试记录",this::clearAiExams).setTag("clear-ai-exams");
+  option(timetableData,R.drawable.ic_calendar,"清空当前课表","清空课程、备注和单次调整，退出学校账号",()->confirmClear()).setTag("clear-timetable");
   LinearLayout tasks=settingsGroup(body,"任务");
   option(tasks,R.drawable.ic_tasks,"任务恢复","恢复已删除或本机标记完成的任务",()->{prepareTasks();taskPage.history();}).setTag("task-deletion-history");
   option(tasks,R.drawable.ic_tasks,"删除全部任务数据","删除手动任务、所有学习通缓存和删除历史，退出学习通账号",()->{prepareTasks();taskPage.clearData();}).setTag("clear-tasks");
@@ -376,9 +378,37 @@ public class MainActivity extends Activity {
  private void timetableSettings(){
   if(navigationOverlay!=null)navigationOverlay.close(false);if(pageBack!=null)home();
   View anchor=root.findViewWithTag("timetable-settings");NavigationOverlay menu=new NavigationOverlay(true,"课表设置",anchor);
+  menuItem(menu,"AI 助手","timetable-ai",()->{aiOrigin=this::home;aiAssistant();});
   menuItem(menu,"添加课程","timetable-add-course",()->courseForm(null,-1,this::home));
   menuItem(menu,"课程调整恢复","adjustment-manager",this::adjustmentManager);
   menuItem(menu,"学校登录","timetable-login",this::login);
+ }
+ private void clearAiExams(){
+  String timetable=Timetables.active(this),baseline=getPreferences(0).getString("aiExams","[]");AlertDialog dialog=new AlertDialog.Builder(this,R.style.SecondaryDialog).setTitle("清空考试记录？").setMessage("将删除当前课表中手动保存的所有考试记录。课程不会被删除。").setNegativeButton("取消",null).setPositiveButton("清空",(d,w)->{if(!timetable.equals(Timetables.active(this))||!baseline.equals(getPreferences(0).getString("aiExams","[]"))){toast("考试记录已变化，请重试。");return;}if(!getPreferences(0).edit().remove("aiExams").commit()){getPreferences(0).edit().putString("aiExams",baseline).commit();toast("清空失败，请重试。");return;}toast("考试记录已清空。");}).create();dialog.show();styleDialog(dialog,true);
+ }
+ private void aiSettings(){
+  LinearLayout body=secondary("DeepSeek 设置","使用你自己的 DeepSeek API 密钥，按 DeepSeek 计费。密钥加密保存在本机，仅用于向 DeepSeek 认证。",this::aiAssistant);DeepSeekKey stored=new DeepSeekKey(this);LinearLayout card=panel(body);card.addView(text(stored.configured()?"已配置密钥":"尚未配置密钥",15,INK));EditText input=courseField(card,"API 密钥","","输入或替换密钥","ai-key");input.setInputType(InputType.TYPE_CLASS_TEXT|InputType.TYPE_TEXT_VARIATION_PASSWORD);input.setSaveEnabled(false);input.setImportantForAutofill(View.IMPORTANT_FOR_AUTOFILL_NO);TextView error=text("",13,DANGER);error.setAccessibilityLiveRegion(View.ACCESSIBILITY_LIVE_REGION_POLITE);card.addView(error);
+  action(body,"保存密钥",()->{try{stored.save(input.getText().toString());input.getText().clear();toast("密钥已保存");aiAssistant();}catch(Exception e){error.setText("密钥未保存，请检查后重试。");}}).setTag("ai-key-save");
+  if(stored.configured())action(body,"删除密钥",()->{try{stored.clear();input.getText().clear();toast("密钥已删除");aiSettings();}catch(Exception e){error.setText("密钥删除失败，请重试。");}}).setTag("ai-key-delete");
+ }
+ private void aiAssistant(){
+  LinearLayout body=secondary("AI 助手","发送消息会将本次对话、当前课表、单次调整和考试记录发送给 DeepSeek，产生 API 费用。考试记录由你手动提供，结果请核对。只有显示“操作已保存”后才会写入数据。",aiOrigin==null?this::home:aiOrigin);DeepSeekKey stored=new DeepSeekKey(this);LinearLayout tools=settingsGroup(body,"");option(tools,R.drawable.ic_settings,"DeepSeek 设置",stored.configured()?"已配置密钥":"请先设置 API 密钥",this::aiSettings).setTag("ai-settings");option(tools,R.drawable.ic_calendar,"考试记录","查看本课表中手动保存的记录",this::aiExams).setTag("ai-exams");
+  LinearLayout history=panel(body);history.setTag("ai-history");TextView greeting=text("可以询问课程或考试，也可以说：添加周一第 1–2 节、第 1–16 周的高数。",14,MUTED);greeting.setLineSpacing(dp(4),1);history.addView(greeting);TextView status=text("",13,DANGER);status.setTag("ai-status");status.setAccessibilityLiveRegion(View.ACCESSIBILITY_LIVE_REGION_POLITE);body.addView(status);EditText message=courseField(panel(body),"发送消息","","输入问题或操作","ai-message");message.setSingleLine(false);message.setMinLines(2);message.setMaxLines(5);message.setFilters(new android.text.InputFilter[]{new android.text.InputFilter.LengthFilter(2000)});org.json.JSONArray chat=new org.json.JSONArray();Button[] send={null};
+  send[0]=action(body,"发送",()->{
+   String input=message.getText().toString().trim();if(input.isEmpty()){message.setError("请输入消息");return;}if(!stored.configured()){aiSettings();return;}if(busy){toast("请等待同步结束");return;}
+   final String snapshot=data,examSnapshot=getPreferences(0).getString("aiExams","[]"),timetable=Timetables.active(this),termSnapshot=term,adjustmentSnapshot=adjustments,timesSnapshot=classTimes.encode();final int token=screen,current=currentWeek();org.json.JSONArray request=new org.json.JSONArray();try{for(int i=Math.max(0,chat.length()-8);i<chat.length();i++)request.put(chat.getJSONObject(i));request.put(new org.json.JSONObject().put("role","user").put("content",input));}catch(Exception e){status.setText("无法准备消息，请重试。");return;}
+   send[0].setEnabled(false);status.setText("正在连接 DeepSeek…");worker.execute(()->{try{org.json.JSONObject reply=DeepSeekClient.request(stored.load(),request,snapshot,examSnapshot,termSnapshot,current,timesSnapshot,adjustmentSnapshot);String content=reply.getString("reply").trim();if(content.isEmpty()||content.length()>8000)throw new IllegalArgumentException("回复格式不正确，请重试。");Object proposed=reply.opt("operation");DeepSeekPlan plan=null;if(proposed!=null&&proposed!=org.json.JSONObject.NULL){if(!(proposed instanceof org.json.JSONObject))throw new IllegalArgumentException("操作格式不正确，请重新描述。");plan=DeepSeekPlan.build((org.json.JSONObject)proposed,snapshot,examSnapshot,ClassTimes.parse(timesSnapshot));}final DeepSeekPlan ready=plan;runOnUiThread(()->{if(isDestroyed()||screen!=token)return;send[0].setEnabled(true);if(busy||!timetable.equals(Timetables.active(this))||!data.equals(snapshot)||!adjustments.equals(adjustmentSnapshot)||!term.equals(termSnapshot)||!classTimes.encode().equals(timesSnapshot)||!getPreferences(0).getString("aiExams","[]").equals(examSnapshot)){status.setText("数据已变化，请重新发送请求。");return;}status.setText("");message.setText("");TextView userLine=text("你："+input,15,INK);userLine.setPadding(0,dp(12),0,0);history.addView(userLine);String shown=ready==null?content:"已生成待确认的操作，请核对以下内容。";TextView answer=text("AI："+shown,15,INK);answer.setLineSpacing(dp(4),1);answer.setPadding(0,dp(12),0,0);history.addView(answer);try{chat.put(new org.json.JSONObject().put("role","user").put("content",input));chat.put(new org.json.JSONObject().put("role","assistant").put("content",shown));}catch(Exception ignored){}if(ready!=null)confirmAiPlan(ready,snapshot,examSnapshot,timetable,termSnapshot,adjustmentSnapshot,timesSnapshot,token,status,history);});}catch(Exception e){runOnUiThread(()->{if(isDestroyed()||screen!=token)return;send[0].setEnabled(true);String reason=e instanceof java.io.IOException?e.getMessage():"回复或操作格式不正确，请补充信息后重试。";status.setText(reason);});}});
+  });send[0].setTag("ai-send");
+ }
+ private void aiExams(){
+  LinearLayout body=secondary("考试记录","考试信息由你提供，保存在当前课表中。可在 AI 助手中添加、修改或删除。",this::aiAssistant);try{org.json.JSONArray records=DeepSeekPlan.examList(getPreferences(0).getString("aiExams","[]"));if(records.length()==0){body.addView(text("暂无考试记录。",15,MUTED));return;}LinearLayout group=settingsGroup(body,"");for(int i=0;i<records.length();i++){TextView row=text(DeepSeekPlan.examText(records.getJSONObject(i)),15,INK);row.setPadding(dp(16),dp(16),dp(16),dp(16));group.addView(row);}}catch(Exception e){body.addView(text("考试记录格式异常，请检查数据。",14,DANGER));}
+ }
+ private void confirmAiPlan(DeepSeekPlan plan,String snapshot,String examSnapshot,String timetable,String termSnapshot,String adjustmentSnapshot,String timesSnapshot,int token,TextView status,LinearLayout history){
+  String detail=plan.description;try{int lost=0;List<Course> before=Course.parse(snapshot),after=Course.parse(plan.courses);for(CourseAdjustment adjustment:CourseAdjustment.parse(adjustmentSnapshot))if(adjustment.applies(before,termSnapshot)&&!adjustment.applies(after,termSnapshot))lost++;if(lost>0)detail+="\n\n此操作会使 "+lost+" 条单次课程调整不再生效。";}catch(Exception e){status.setText("课程调整记录异常，未执行操作。");return;}
+  AlertDialog dialog=new AlertDialog.Builder(this,R.style.SecondaryDialog).setTitle("确认操作？").setMessage(detail).setNegativeButton("取消",(d,w)->status.setText("已取消操作。" )).setPositiveButton("确认保存",(d,w)->{
+   if(screen!=token||busy||!timetable.equals(Timetables.active(this))||!data.equals(snapshot)||!adjustments.equals(adjustmentSnapshot)||!term.equals(termSnapshot)||!classTimes.encode().equals(timesSnapshot)||!getPreferences(0).getString("aiExams","[]").equals(examSnapshot)){status.setText("数据已变化，请重新发送请求。");return;}
+   SharedPreferences.Editor edit=getPreferences(0).edit();if(!plan.courses.equals(snapshot))edit.putString("courses",plan.courses);if(!plan.exams.equals(examSnapshot))edit.putString("aiExams",plan.exams);if(!edit.commit()){getPreferences(0).edit().putString("courses",snapshot).putString("aiExams",examSnapshot).commit();status.setText("保存失败，请重试。");return;}data=plan.courses;CourseWidget.updateAll(this);TextView result=text("已保存："+plan.description,14,PRIMARY);result.setPadding(0,dp(12),0,0);history.addView(result);status.setText("操作已保存。");
+  }).create();dialog.show();styleDialog(dialog,false);
  }
  private void appearanceSettings(){
   LinearLayout body=secondary("外观","",()->menu());
