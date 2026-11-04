@@ -15,6 +15,13 @@ import static org.robolectric.util.ReflectionHelpers.*;
 
 @RunWith(RobolectricTestRunner.class) @Config(sdk=34)
 public class DeepSeekAssistantTest {
+ @Test public void examAppearsOnCorrectDayAndCanBeOpened()throws Exception{
+  try(ActivityController<MainActivity> c=Robolectric.buildActivity(MainActivity.class).setup()){
+   MainActivity a=c.get();setField(a,"term","2026-08-31");a.getPreferences(0).edit().putString("aiExams","[{\"name\":\"英语\",\"date\":\"2026-09-04\",\"time\":\"\",\"room\":\"\"}]").commit();LinearLayout days=new LinearLayout(a);for(int i=0;i<8;i++)days.addView(new TextView(a));
+   callInstanceMethod(a,"updateDays",ClassParameter.from(LinearLayout.class,days),ClassParameter.from(int.class,1));TextView friday=(TextView)days.getChildAt(5);assertTrue(friday.getText().toString().contains("考"));assertTrue(friday.performClick());assertTrue(org.robolectric.shadows.ShadowAlertDialog.getLatestAlertDialog().isShowing());
+   callInstanceMethod(a,"updateDays",ClassParameter.from(LinearLayout.class,days),ClassParameter.from(int.class,2));assertFalse(friday.getText().toString().contains("考"));assertFalse(friday.hasOnClickListeners());
+  }
+ }
  @Test public void confirmationAndStaleDataProtectRecords()throws Exception{
   try(ActivityController<MainActivity> c=Robolectric.buildActivity(MainActivity.class).setup()){
    MainActivity a=c.get();callInstanceMethod(a,"aiAssistant");View root=a.findViewById(android.R.id.content);assertNotNull(root.findViewWithTag("ai-message"));assertNotNull(root.findViewWithTag("ai-exams"));
