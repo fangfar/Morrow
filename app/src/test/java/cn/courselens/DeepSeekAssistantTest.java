@@ -15,6 +15,13 @@ import static org.robolectric.util.ReflectionHelpers.*;
 
 @RunWith(RobolectricTestRunner.class) @Config(sdk=34)
 public class DeepSeekAssistantTest {
+ @Test public void keyboardInsetsAreAppliedOnceAndTabsReturnAfterDismissal()throws Exception{
+  try(ActivityController<MainActivity> c=Robolectric.buildActivity(MainActivity.class).setup()){
+   MainActivity a=c.get();callInstanceMethod(a,"aiAssistant");View stage=getField(a,"stage"),nav=a.findViewById(android.R.id.content).findViewWithTag("bottom-navigation");
+   android.view.WindowInsets shown=new android.view.WindowInsets.Builder().setInsets(android.view.WindowInsets.Type.ime(),android.graphics.Insets.of(0,0,0,600)).setVisible(android.view.WindowInsets.Type.ime(),true).build();callInstanceMethod(a,"applyStageInsets",ClassParameter.from(View.class,stage),ClassParameter.from(android.view.WindowInsets.class,shown));assertEquals(600,stage.getPaddingBottom());assertEquals(View.GONE,nav.getVisibility());
+   android.view.WindowInsets hidden=new android.view.WindowInsets.Builder().setVisible(android.view.WindowInsets.Type.ime(),false).build();callInstanceMethod(a,"applyStageInsets",ClassParameter.from(View.class,stage),ClassParameter.from(android.view.WindowInsets.class,hidden));assertEquals(0,stage.getPaddingBottom());assertEquals(View.VISIBLE,nav.getVisibility());assertNotNull(((View)getField(a,"root")).findViewWithTag("ai-message"));
+  }
+ }
  @Test public void aiIsIndependentBottomTab()throws Exception{
   try(ActivityController<MainActivity> c=Robolectric.buildActivity(MainActivity.class).setup()){
    MainActivity a=c.get();View content=a.findViewById(android.R.id.content);content.findViewWithTag("nav-ai").performClick();assertTrue(content.findViewWithTag("nav-ai").isSelected());assertEquals(View.VISIBLE,content.findViewWithTag("bottom-navigation").getVisibility());assertNotNull(content.findViewWithTag("ai-message"));content.findViewWithTag("nav-timetable").performClick();assertTrue(content.findViewWithTag("nav-timetable").isSelected());content.findViewWithTag("nav-ai").performClick();assertTrue(content.findViewWithTag("nav-ai").isSelected());
