@@ -52,6 +52,12 @@ final class TimetableScrollView extends ScrollView {
  final class WeekPager extends ViewPager {
   WeekPager(Context context){super(context);}
 
+  @Override protected void onAttachedToWindow(){
+   super.onAttachedToWindow();
+   // A retained pager resets its first-layout state even when its measured size is unchanged.
+   requestLayout();
+  }
+
   @Override public boolean onInterceptTouchEvent(MotionEvent event){
    if(event.getActionMasked()==MotionEvent.ACTION_MOVE&&direction!=HORIZONTAL)return false;
    MotionEvent horizontal=MotionEvent.obtain(event);
