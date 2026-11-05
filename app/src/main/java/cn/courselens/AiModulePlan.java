@@ -5,10 +5,11 @@ import org.json.*;
 final class AiModulePlan {
  final JSONObject operation,expected;final String description;
  private AiModulePlan(JSONObject operation,JSONObject expected,String description){this.operation=operation;this.expected=expected;this.description=description;}
- static boolean supports(String type){return type.endsWith("_task")||type.endsWith("_parcel")||type.equals("open_page");}
+ static boolean supports(String type){return type.endsWith("_task")||type.endsWith("_parcel")||type.equals("open_page")||type.equals("remember_project");}
  static JSONObject parcel(ParcelRecord p)throws Exception{return new JSONObject().put("id",p.id).put("code",p.code).put("station",p.station).put("tracking",p.trackingNumber).put("state",p.state).put("confirmed",p.confirmed).put("updatedAt",p.updatedAt);}
  static AiModulePlan build(JSONObject op,JSONObject context)throws Exception{
   DeepSeekPlan.fields(op,"type","index","value");String type=op.getString("type");JSONObject value=op.optJSONObject("value"),expected=null;
+  if(type.equals("remember_project")){if(value==null)throw new IllegalArgumentException("请说明要记住的内容");DeepSeekPlan.fields(value,"text");String memory=value.getString("text").trim();if(memory.isEmpty()||memory.length()>2000)throw new IllegalArgumentException("记忆内容应为1–2000字");return new AiModulePlan(op,context.getJSONObject("project"),"保存到当前项目记忆：\n"+memory);}
   if(type.equals("open_page")){if(value==null)throw new IllegalArgumentException("页面未指定");DeepSeekPlan.fields(value,"page");String page=value.getString("page");if(!java.util.Arrays.asList("timetable","tasks","parcels","settings","exams","term","times","timetables").contains(page))throw new IllegalArgumentException("页面不支持");String[] ids={"timetable","tasks","parcels","settings","exams","term","times","timetables"},labels={"课表","任务","快递","设置","考试记录","开学日期","作息时间","课表管理"};return new AiModulePlan(op,null,"打开"+labels[java.util.Arrays.asList(ids).indexOf(page)]);}
   boolean task=type.endsWith("_task");if(!context.optBoolean(task?"tasks_available":"parcels_available",true))throw new IllegalArgumentException("模块数据尚未就绪");if(!java.util.Arrays.asList("add_task","update_task","delete_task","complete_task","add_parcel","update_parcel","delete_parcel","complete_parcel").contains(type))throw new IllegalArgumentException("不支持此操作");
   if(!type.startsWith("add_")){JSONArray rows=context.getJSONArray(task?"tasks":"parcels");int index=DeepSeekPlan.integer(op,"index",0);if(index<1||index>rows.length())throw new IllegalArgumentException("目标已变化");expected=rows.getJSONObject(index-1);}

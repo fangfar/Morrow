@@ -15,6 +15,11 @@ import static org.robolectric.util.ReflectionHelpers.*;
 
 @RunWith(RobolectricTestRunner.class) @Config(sdk=34)
 public class DeepSeekAssistantTest {
+ @Test public void memoryToolPersistsProjectContext()throws Exception{
+  try(ActivityController<MainActivity> c=Robolectric.buildActivity(MainActivity.class).setup()){
+   MainActivity a=c.get();callInstanceMethod(a,"aiAssistant");AiChats store=callInstanceMethod(a,"aiStore");JSONObject context=new JSONObject().put("project",new JSONObject().put("id",store.project().getString("id")));AiModulePlan plan=AiModulePlan.build(new JSONObject("{\"type\":\"remember_project\",\"value\":{\"text\":\"偏好简洁回答\"}}"),context);callInstanceMethod(a,"executeAiModule",ClassParameter.from(AiModulePlan.class,plan),ClassParameter.from(TextView.class,new TextView(a)));assertEquals("偏好简洁回答",new AiChats(a).project().getString("memory"));
+  }
+ }
  @Test public void keyboardInsetsAreAppliedOnceAndTabsReturnAfterDismissal()throws Exception{
   try(ActivityController<MainActivity> c=Robolectric.buildActivity(MainActivity.class).setup()){
    MainActivity a=c.get();callInstanceMethod(a,"aiAssistant");View stage=getField(a,"stage"),nav=a.findViewById(android.R.id.content).findViewWithTag("bottom-navigation");
