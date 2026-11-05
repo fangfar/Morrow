@@ -1,0 +1,6 @@
+package cn.courselens;
+import android.text.*;import android.text.style.*;import android.graphics.Typeface;import java.util.regex.*;
+final class AiText {
+ private static final Pattern MARKUP=Pattern.compile("```[^\\n]*\\n(.*?)```|`([^`\\n]+)`|\\*\\*([^*\\n]+)\\*\\*|^#{1,6} +([^\\n]+)$|^[-*] +",Pattern.MULTILINE|Pattern.DOTALL);
+ static CharSequence format(String source){SpannableStringBuilder out=new SpannableStringBuilder();Matcher m=MARKUP.matcher(source);int previous=0;while(m.find()){out.append(source,previous,m.start());String value=m.group(1)!=null?m.group(1):m.group(2)!=null?m.group(2):m.group(3)!=null?m.group(3):m.group(4)!=null?m.group(4):"• ";int begin=out.length();out.append(value);if(m.group(1)!=null||m.group(2)!=null){out.setSpan(new TypefaceSpan("monospace"),begin,out.length(),Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);out.setSpan(new RelativeSizeSpan(.9f),begin,out.length(),Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);}else if(m.group(3)!=null||m.group(4)!=null)out.setSpan(new StyleSpan(Typeface.BOLD),begin,out.length(),Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);previous=m.end();}out.append(source,previous,source.length());return out;}
+}

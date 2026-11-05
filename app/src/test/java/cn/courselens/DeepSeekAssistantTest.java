@@ -15,6 +15,11 @@ import static org.robolectric.util.ReflectionHelpers.*;
 
 @RunWith(RobolectricTestRunner.class) @Config(sdk=34)
 public class DeepSeekAssistantTest {
+ @Test public void historyDrawerAndStopControlWork()throws Exception{
+  try(ActivityController<MainActivity> c=Robolectric.buildActivity(MainActivity.class).setup()){
+   MainActivity a=c.get();callInstanceMethod(a,"aiAssistant");View page=getField(a,"root");page.findViewWithTag("ai-history-button").performClick();android.app.Dialog drawer=getField(a,"aiDrawer");assertTrue(drawer.isShowing());assertNotNull(drawer.findViewById(android.R.id.content).findViewWithTag("ai-history-search"));assertNotNull(drawer.findViewById(android.R.id.content).findViewWithTag("ai-history-new-project"));drawer.dismiss();DeepSeekClient.Call call=new DeepSeekClient.Call();setField(a,"aiCall",call);setField(a,"aiSending",true);page.findViewWithTag("ai-send").performClick();assertTrue(call.cancelled);
+  }
+ }
  @Test public void memoryToolPersistsProjectContext()throws Exception{
   try(ActivityController<MainActivity> c=Robolectric.buildActivity(MainActivity.class).setup()){
    MainActivity a=c.get();callInstanceMethod(a,"aiAssistant");AiChats store=callInstanceMethod(a,"aiStore");JSONObject context=new JSONObject().put("project",new JSONObject().put("id",store.project().getString("id")));AiModulePlan plan=AiModulePlan.build(new JSONObject("{\"type\":\"remember_project\",\"value\":{\"text\":\"偏好简洁回答\"}}"),context);callInstanceMethod(a,"executeAiModule",ClassParameter.from(AiModulePlan.class,plan),ClassParameter.from(TextView.class,new TextView(a)));assertEquals("偏好简洁回答",new AiChats(a).project().getString("memory"));
