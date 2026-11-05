@@ -21,7 +21,10 @@
 
 ## AI 助手
 
-- 目前接入 DeepSeek Chat Completions，以用户自行提供的 API 密钥认证；密钥用 Android Keystore 加密保存在 `deepseek_key` 中，可在助手设置中删除，不进入备份、日志、课表或对话。发送时将当前课表、有效单次调整、当前课表的手动考试记录及最近对话发给 DeepSeek；界面需明确告知和提示费用。
+- 底部 AI 与课表、任务、快递并列；跨模块请求提供当前本机任务和快递快照。任务操作沿用 TaskPage 的串行保存、账号隔离与恢复历史；快递沿用 ParcelRepository 的校验、去重、恢复、通知和组件更新。目标变化时拒绝写入。平台任务只变更本机记录，不代表向学习通提交作业。设置通过打开相应设置页交给用户操作，不让模型接触密码或密钥。
+- 全局操作检查包括 `AiModulePlanTest`、`AiModulesIntegrationTest`、底部/侧栏导航测试；Windows 文件替换测试复用 `DataManagementTest.AtomicRename`。
+
+- 目前接入 DeepSeek Chat Completions，以用户自行提供的 API 密钥认证；密钥用 Android Keystore 加密保存在 `deepseek_key` 中，可在助手设置中删除，不进入备份、日志、课表或对话。发送时将当前课表、有效单次调整、当前课表的手动考试记录、任务与快递数据及最近对话发给 DeepSeek；界面需明确告知和提示费用。
 - 考试记录保存在对应课表偏好的 `aiExams`，日期必填，时间可未知；数据管理可单独清空。它不代表学校考试查询，也不自动同步。模型只能提出一个操作，所有添加、修改和删除都先展示并确认；应用校验字段、节次与日期，确认前检查当前课表和快照是否变化，保存失败时尝试恢复原数据。修改或删除课程可能使单次调整失效，须提示。
 - 执行 `DeepSeekPlanTest`、`DeepSeekAssistantTest` 和相关界面测试；真实 DeepSeek 连接、密钥加密与设备键盘交互需另行验收。模型回复可能出错，不能把自然语言回答或确认前的建议当作已执行结果。
 

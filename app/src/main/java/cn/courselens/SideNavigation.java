@@ -16,7 +16,7 @@ final class SideNavigation extends FrameLayout {
  private final View content,shade;
  private final FrameLayout foreground;
  private final LinearLayout panel;
- private final TextView[] destinations=new TextView[3];
+ private final TextView[] destinations=new TextView[4];
  private final int surface,ink;
  private Object back;
  private View previousFocus;
@@ -32,7 +32,7 @@ final class SideNavigation extends FrameLayout {
   panel.setOnApplyWindowInsetsListener((view,insets)->{view.setPadding(ui.dp(16),insets.getSystemWindowInsetTop()+ui.dp(20),ui.dp(8),insets.getSystemWindowInsetBottom()+ui.dp(16));return insets;});
   TextView title=ui.text("Morrow",28,ink);title.setPadding(ui.dp(8),ui.dp(24),0,ui.dp(36));panel.addView(title);
   ScrollView scroll=new ScrollView(activity);panel.addView(scroll,new LinearLayout.LayoutParams(-1,0,1));LinearLayout items=new LinearLayout(activity);items.setOrientation(LinearLayout.VERTICAL);scroll.addView(items);
-  String[] names={"课表","任务","快递"},tags={"drawer-timetable","drawer-tasks","drawer-parcels"};int[] icons={R.drawable.ic_calendar,R.drawable.ic_tasks,R.drawable.ic_parcel};
+  String[] names={"课表","任务","快递","AI 助手"},tags={"drawer-timetable","drawer-tasks","drawer-parcels","drawer-ai"};int[] icons={R.drawable.ic_calendar,R.drawable.ic_tasks,R.drawable.ic_parcel,R.drawable.ic_chat};
   for(int i=0;i<names.length;i++){int index=i;destinations[i]=item(names[i],icons[i],tags[i],()->choose(()->navigate.accept(index)));items.addView(destinations[i],new LinearLayout.LayoutParams(-1,-2));}
   LinearLayout footer=new LinearLayout(activity);footer.setPadding(ui.dp(8),ui.dp(12),0,0);panel.addView(footer,new LinearLayout.LayoutParams(-1,-2));Button preferences=ui.iconAction(footer,R.drawable.ic_settings,"设置",()->choose(settings));preferences.setTag("drawer-settings");preferences.getCompoundDrawables()[0].setTint(ink);preferences.setBackground(ui.bg(surface,24));((LinearLayout.LayoutParams)preferences.getLayoutParams()).leftMargin=0;
   foreground=new FrameLayout(activity);foreground.setBackgroundColor(surface);foreground.setOutlineProvider(new ViewOutlineProvider(){@Override public void getOutline(View view,android.graphics.Outline outline){outline.setRoundRect(0,0,view.getWidth(),view.getHeight(),ui.dp(28)*progress);}});foreground.addView(content,new LayoutParams(-1,-1));addView(foreground,new LayoutParams(-1,-1));

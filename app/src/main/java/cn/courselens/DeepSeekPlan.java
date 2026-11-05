@@ -6,6 +6,8 @@ import org.json.*;
 
 final class DeepSeekPlan {
  final String courses,exams,description;
+ AiModulePlan module;
+ static DeepSeekPlan module(AiModulePlan module,String courses,String exams){DeepSeekPlan plan=new DeepSeekPlan(courses,exams,module.description);plan.module=module;return plan;}
  private DeepSeekPlan(String courses,String exams,String description){this.courses=courses;this.exams=exams;this.description=description;}
  static String clean(String value){if(value==null||value.length()>200||value.contains("|")||value.contains("\n")||value.contains("\r"))throw new IllegalArgumentException("内容过长或包含无效字符");return value.trim();}
  static String str(JSONObject o,String key,String fallback)throws JSONException{if(!o.has(key))return fallback;Object v=o.get(key);if(!(v instanceof String))throw new IllegalArgumentException("字段格式不正确："+key);return clean((String)v);}
