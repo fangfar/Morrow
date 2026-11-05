@@ -53,7 +53,7 @@ public class DeepSeekAssistantTest {
  @Test public void examAppearsOnCorrectDayAndCanBeOpened()throws Exception{
   try(ActivityController<MainActivity> c=Robolectric.buildActivity(MainActivity.class).setup()){
    MainActivity a=c.get();setField(a,"term","2026-08-31");a.getPreferences(0).edit().putString("aiExams","[{\"name\":\"英语\",\"date\":\"2026-09-04\",\"time\":\"\",\"room\":\"\"}]").commit();LinearLayout days=new LinearLayout(a);for(int i=0;i<8;i++)days.addView(new TextView(a));
-   callInstanceMethod(a,"updateDays",ClassParameter.from(LinearLayout.class,days),ClassParameter.from(int.class,1));TextView friday=(TextView)days.getChildAt(5);assertTrue(friday.getText().toString().contains("考"));assertTrue(friday.performClick());assertTrue(org.robolectric.shadows.ShadowAlertDialog.getLatestAlertDialog().isShowing());
+   callInstanceMethod(a,"updateDays",ClassParameter.from(LinearLayout.class,days),ClassParameter.from(int.class,1));TextView friday=(TextView)days.getChildAt(5);assertTrue(friday.getContentDescription().toString().contains("有考试"));assertEquals("五\n9/4",friday.getText().toString());assertTrue(friday.performClick());assertTrue(org.robolectric.shadows.ShadowAlertDialog.getLatestAlertDialog().isShowing());
    callInstanceMethod(a,"updateDays",ClassParameter.from(LinearLayout.class,days),ClassParameter.from(int.class,2));assertFalse(friday.getText().toString().contains("考"));assertFalse(friday.hasOnClickListeners());
   }
  }
