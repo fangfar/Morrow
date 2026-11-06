@@ -12,7 +12,8 @@ final class DeepSeekKey {
  private static final String ALIAS="courselens.deepseek.key.v1";
  private final SharedPreferences prefs;
  private final byte[] context;
- DeepSeekKey(Context app){prefs=app.getSharedPreferences("deepseek_key",Context.MODE_PRIVATE);context=(app.getPackageName()+":deepseek:v1").getBytes(StandardCharsets.UTF_8);}
+ DeepSeekKey(Context app){this(app,"deepseek_key");}
+ DeepSeekKey(Context app,String store){prefs=app.getSharedPreferences(store,Context.MODE_PRIVATE);context=(app.getPackageName()+(store.equals("deepseek_key")?":deepseek:v1":":"+store+":v1")).getBytes(StandardCharsets.UTF_8);}
  boolean configured(){return prefs.contains("key")&&prefs.contains("iv");}
  private SecretKey key(boolean create)throws Exception{
   KeyStore store=KeyStore.getInstance("AndroidKeyStore");store.load(null);
@@ -22,6 +23,10 @@ final class DeepSeekKey {
  }
  void save(String value)throws Exception{
   value=value.trim();if(value.isEmpty()||value.length()>512||value.contains("\n")||value.contains("\r"))throw new IllegalArgumentException("请输入有效的 API 密钥。");
+  saveDocument(value);
+ }
+ void saveDocument(String value)throws Exception{
+  if(value.isEmpty()||value.length()>65536)throw new IllegalArgumentException("配置内容过长。");
   Cipher cipher=Cipher.getInstance("AES/GCM/NoPadding");cipher.init(Cipher.ENCRYPT_MODE,key(true));cipher.updateAAD(context);byte[] plain=value.getBytes(StandardCharsets.UTF_8);
   try{String encrypted=Base64.encodeToString(cipher.doFinal(plain),Base64.NO_WRAP),iv=Base64.encodeToString(cipher.getIV(),Base64.NO_WRAP);String previous=prefs.getString("key",null),previousIv=prefs.getString("iv",null);if(!prefs.edit().putString("key",encrypted).putString("iv",iv).commit()){SharedPreferences.Editor rollback=prefs.edit();if(previous==null)rollback.remove("key");else rollback.putString("key",previous);if(previousIv==null)rollback.remove("iv");else rollback.putString("iv",previousIv);rollback.commit();throw new java.io.IOException("密钥保存失败，请重试。");}}finally{java.util.Arrays.fill(plain,(byte)0);}
  }

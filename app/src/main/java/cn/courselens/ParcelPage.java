@@ -121,7 +121,7 @@ final class ParcelPage extends LinearLayout {
  private LinearLayout column(){LinearLayout view=new LinearLayout(activity);view.setOrientation(LinearLayout.VERTICAL);return view;}
  private TextView text(String value,int size,int color){return ui.text(value,size,color);}
  private void icon(LinearLayout host,int drawable,String name,Runnable action){Button b=ui.iconAction(host,drawable,name,action);b.getCompoundDrawables()[0].setTint(ink);}
- private Button button(LinearLayout host,String name,Runnable action){Button b=ui.action(host,name,action);b.setBackgroundTintList(null);b.setTextColor(ink);b.setBackground(ui.bg(activity.getColor(R.color.parcel_soft),16));b.setGravity(Gravity.CENTER);LinearLayout.LayoutParams lp=(LinearLayout.LayoutParams)b.getLayoutParams();lp.width=host.getOrientation()==VERTICAL?-1:-2;lp.bottomMargin=ui.dp(4);return b;}
+ private Button button(LinearLayout host,String name,Runnable action){Button b=ui.action(host,name,action);b.setBackgroundTintList(null);b.setTextColor(ink);b.setBackground(ui.bg(activity.getColor(R.color.parcel_soft),16));b.setGravity(Gravity.CENTER);LinearLayout.LayoutParams lp=(LinearLayout.LayoutParams)b.getLayoutParams();lp.width="secondary-actions".equals(host.getTag())?0:host.getOrientation()==VERTICAL?-1:-2;lp.bottomMargin=ui.dp(4);return b;}
  private void feedbackViewHide(){if(!closed)feedback.setVisibility(GONE);}
  private void message(String value){if(closed)return;if(!isShown()||currentSheet!=null&&currentSheet.isShowing()){Toast.makeText(activity,value,Toast.LENGTH_LONG).show();return;}feedback.removeCallbacks(clearFeedback);feedback.setText(value);feedback.setVisibility(VISIBLE);feedback.postDelayed(clearFeedback,6000);}
  private void load(){
@@ -228,8 +228,8 @@ final class ParcelPage extends LinearLayout {
  private void importSheet(){
   LinearLayout body=sheet("读取快递信息");importInput=field(body,"粘贴取件信息，或选择图片（仅本机读取）","");importInput.setTag("parcel-import-text");importInput.setSingleLine(false);importInput.setMinLines(3);importInput.setFilters(new android.text.InputFilter[]{new android.text.InputFilter.LengthFilter(ParcelRules.MAX_TEXT)});
   importError=text("",14,ui.DANGER);importError.setTag("parcel-import-feedback");importError.setVisibility(GONE);importError.setAccessibilityLiveRegion(ACCESSIBILITY_LIVE_REGION_POLITE);body.addView(importError);
-  EditText input=importInput;button(body,"读取文字",()->recognize(input.getText().toString(),"粘贴文字")).setTag("parcel-read-text");button(body,OcrPluginActivity.installed(activity)?"选择图片":"下载图片识别插件",()->ocr(null)).setTag("parcel-ocr-plugin");
-  button(body,"通知读取设置",()->settingsSection(0)).setTag("parcel-notification-settings");button(body,"手动添加",()->edit(new ParcelRecord()));
+  EditText input=importInput;LinearLayout readActions=ui.actionRow(body);button(readActions,"读取文字",()->recognize(input.getText().toString(),"粘贴文字")).setTag("parcel-read-text");button(readActions,OcrPluginActivity.installed(activity)?"选择图片":"下载图片识别插件",()->ocr(null)).setTag("parcel-ocr-plugin");
+  LinearLayout options=ui.actionRow(body);button(options,"通知读取设置",()->settingsSection(0)).setTag("parcel-notification-settings");button(options,"手动添加",()->edit(new ParcelRecord()));
  }
  private void readFeedback(String value){if(importError!=null&&currentSheet!=null&&currentSheet.isShowing()&&currentSheet.getWindow().getDecorView().findViewWithTag("parcel-import-feedback")==importError){importError.setText(value);importError.setVisibility(VISIBLE);}else message(value);}
  private void ocr(android.net.Uri uri){
@@ -257,8 +257,8 @@ final class ParcelPage extends LinearLayout {
  }
  private void reminder(ParcelRecord p){
   LinearLayout body=sheet("未领取提醒");body.addView(text("提醒可能因省电、后台限制而延迟。请先在快递管理中开启提醒。",14,muted));
-  button(body,"选择日期与时间",()->pickReminder(p));
-  button(body,"取消本条提醒",()->saveReminder(p.id,0));
+  LinearLayout actions=ui.actionRow(body);button(actions,"选择日期与时间",()->pickReminder(p));
+  button(actions,"取消本条提醒",()->saveReminder(p.id,0));
  }
  private void pickReminder(ParcelRecord p){
   java.util.Calendar date=java.util.Calendar.getInstance();if(p.remindAt>System.currentTimeMillis())date.setTimeInMillis(p.remindAt);
