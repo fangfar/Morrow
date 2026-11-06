@@ -72,7 +72,7 @@ public class MainActivity extends Activity {
   if(root==settingsPage&&settingsPage!=null)settingsScrollY=((ScrollView)settingsPage.getChildAt(1)).getScrollY();
   if(timetableScroll!=null){timetableScrollY=timetableScroll.getScrollY();timetableScroll=null;}
   if(choiceSheet!=null){choiceSheet.close(false);if(choiceSheet.getParent() instanceof ViewGroup)((ViewGroup)choiceSheet.getParent()).removeView(choiceSheet);choiceSheet=null;}
-  LinearLayout previous=root;boolean backwards=secondary?returningPage:pageBackwards;
+  LinearLayout previous=root;boolean backwards=returningPage||(!secondary&&pageBackwards);
   if(aiSpeech!=null)aiStopVoice();if(aiAttachmentMenu!=null)aiAttachmentMenu.close(true);pageBack=null;updateSystemBack();showingDetail=false;screen++;pager=null;
   if(previous==parcelPage&&retained!=parcelPage)parcelPage.pause();
   if(stage==null){stage=new FrameLayout(this){@Override public boolean dispatchTouchEvent(MotionEvent event){return pageMotion.isRunning()||super.dispatchTouchEvent(event);}};stage.setBackgroundColor(SURFACE);stage.setOnApplyWindowInsetsListener((view,insets)->{applyStageInsets(view,insets);return insets;});LinearLayout shell=new LinearLayout(this);shell.setOrientation(LinearLayout.VERTICAL);shell.addView(stage,new LinearLayout.LayoutParams(-1,0,1));bottomNavigation=createBottomNavigation();bottomNavigation.setOnApplyWindowInsetsListener((view,insets)->{view.setPadding(0,0,0,androidx.core.view.WindowInsetsCompat.toWindowInsetsCompat(insets,view).getInsets(androidx.core.view.WindowInsetsCompat.Type.navigationBars()).bottom);return insets;});shell.addView(bottomNavigation,new LinearLayout.LayoutParams(-1,-2));windowContent=new FrameLayout(this);windowContent.addView(shell,new FrameLayout.LayoutParams(-1,-1));sideNavigation=new SideNavigation(this,windowContent,SURFACE,CARD,INK,this::selectPrimaryPage,()->{settingsFromParcel=parcelsVisible;settingsFromAi=aiVisible;settingsFromParcelActivity=false;menu();});setContentView(sideNavigation);}
@@ -178,7 +178,7 @@ public class MainActivity extends Activity {
  private NavigationOverlay sheetMenu(String title){return new NavigationOverlay(true,title);}
  class NavigationOverlay extends MotionOverlay {
   final boolean corner;final View anchor;View returnFocus;final LinearLayout panel,body;final View shade;final LinearLayout underneath;final Runnable underneathBack;final NavigationOverlay previous;
-  final int accessibility;final boolean underneathDetail;boolean fitContent;boolean open=true;int menuWidth=SecondaryUi.MENU_WIDTH;int preferredMenuTop,menuAnchorHeight=dp(48);
+  final int accessibility;final boolean underneathDetail;boolean fitContent,overlapsAnchor;boolean open=true;int menuWidth=SecondaryUi.MENU_WIDTH;int preferredMenuTop,menuAnchorHeight=dp(48);
   NavigationOverlay(boolean corner,String title){this(corner,title,null);}
   NavigationOverlay(boolean corner,String title,View anchor){
    super(MainActivity.this);pageMotion.cancel();this.corner=corner;this.anchor=anchor;underneath=root;underneathBack=pageBack;underneathDetail=showingDetail;previous=navigationOverlay;accessibility=underneath.getImportantForAccessibility();
@@ -197,7 +197,14 @@ public class MainActivity extends Activity {
   @Override protected void onMeasure(int widthSpec,int heightSpec){
    FrameLayout.LayoutParams bounds=(FrameLayout.LayoutParams)panel.getLayoutParams();int height=MeasureSpec.getSize(heightSpec)-getPaddingBottom();bounds.bottomMargin=0;
    bounds.width=Math.max(1,MeasureSpec.getSize(widthSpec)-(corner?dp(24):0));bounds.height=-2;
-   if(corner){bounds.width=Math.min(bounds.width,dp(menuWidth));placeMenu(height,preferredMenuTop,menuAnchorHeight);}
+   if(corner){
+    bounds.width=Math.min(bounds.width,dp(menuWidth));
+    if(overlapsAnchor&&anchor!=null){
+     LinearLayout.LayoutParams content=(LinearLayout.LayoutParams)panel.getChildAt(0).getLayoutParams();content.height=-2;content.weight=0;
+     int[] at=new int[2],origin=new int[2];anchor.getLocationInWindow(at);getLocationInWindow(origin);placeMenuOverAnchor(MeasureSpec.getSize(widthSpec),height,new Rect(at[0]-origin[0],at[1]-origin[1],at[0]-origin[0]+anchor.getWidth(),at[1]-origin[1]+anchor.getHeight()));
+     content.height=0;content.weight=1;
+    }else placeMenu(height,preferredMenuTop,menuAnchorHeight);
+   }
    else if(fitContent){panel.measure(MeasureSpec.makeMeasureSpec(bounds.width,MeasureSpec.EXACTLY),MeasureSpec.makeMeasureSpec(0,MeasureSpec.UNSPECIFIED));bounds.height=Math.min(panel.getMeasuredHeight(),Math.max(1,height-Math.max(dp(24),safeTop())));}
    else bounds.height=Math.max(1,height/2);
    super.onMeasure(widthSpec,heightSpec);
@@ -416,7 +423,7 @@ public class MainActivity extends Activity {
   try{
    AiProviders providers=new AiProviders(this);AiProviders.Config selected=providers.active();LinearLayout list=settingsGroup(body,"供应商");
    for(AiProviders.Config config:providers.all()){
-    boolean active=selected!=null&&selected.id.equals(config.id);LinearLayout row=option(list,R.drawable.ic_settings,config.name,config.model+(active?" · 正在使用":""),()->{try{new AiProviders(this).select(config.id);aiSettings();}catch(Exception e){toast("未能切换配置，请重试。");}});row.setTag("ai-provider-"+config.id);row.setSelected(active);
+    boolean active=selected!=null&&selected.id.equals(config.id);LinearLayout row=option(list,R.drawable.ic_settings,config.name,config.model+(active?" · 正在使用":""),()->{try{new AiProviders(this).select(config.id);skipPageMotion=true;try{aiSettings();}finally{skipPageMotion=false;}}catch(Exception e){toast("未能切换配置，请重试。");}});row.setTag("ai-provider-"+config.id);row.setSelected(active);
     TextView edit=(TextView)row.getChildAt(row.getChildCount()-1);edit.setText("");secondaryUi.styleIcon(edit,R.drawable.ic_calendar_edit);edit.setLayoutParams(new LinearLayout.LayoutParams(dp(48),dp(48)));edit.setTag("ai-provider-edit-"+config.id);edit.setContentDescription("编辑 "+config.name);edit.setFocusable(true);edit.setOnClickListener(v->aiEditProvider(config));
    }
    if(providers.all().isEmpty())body.addView(text("尚未添加 API 配置",15,MUTED));
@@ -434,8 +441,8 @@ public class MainActivity extends Activity {
   CheckBox reasoning=new CheckBox(this);reasoning.setText("模型支持推理强度");reasoning.setTextColor(INK);reasoning.setChecked(initial.reasoning);reasoning.setMinHeight(dp(48));reasoning.setTag("ai-provider-reasoning");card.addView(reasoning);
   protocol.setOnItemSelectedListener(new android.widget.AdapterView.OnItemSelectedListener(){public void onNothingSelected(android.widget.AdapterView<?> parent){}public void onItemSelected(android.widget.AdapterView<?> parent,View view,int position,long value){if(existing==null&&position==1&&base.getText().toString().equals("https://api.deepseek.com")){name.setText("OpenAI 兼容");base.setText("https://api.openai.com/v1");model.setText("");reasoning.setChecked(false);}}});
   TextView error=text("",13,DANGER);error.setAccessibilityLiveRegion(View.ACCESSIBILITY_LIVE_REGION_POLITE);body.addView(error);LinearLayout actions=secondaryUi.actionRow(body);body.removeView(actions);LinearLayout.LayoutParams footer=new LinearLayout.LayoutParams(-1,-2);footer.setMargins(dp(16),dp(8),dp(16),dp(12));root.addView(actions,footer);
-  action(actions,"保存",()->{try{new AiProviders(this).save(new AiProviders.Config(id,name.getText().toString(),base.getText().toString(),model.getText().toString(),key.getText().toString(),protocol.getSelectedItemPosition()==0,reasoning.isChecked()));key.getText().clear();aiSettings();}catch(Exception e){error.setText(e instanceof IllegalArgumentException?e.getMessage():"配置未保存，请检查输入或稍后重试。");}}).setTag("ai-key-save");
-  if(existing!=null){Button delete=action(actions,"删除",()->{AlertDialog dialog=new AlertDialog.Builder(this,R.style.SecondaryDialog).setTitle("删除此供应商？").setMessage("将删除本机保存的这份配置和密钥，聊天记录会保留。").setNegativeButton("取消",null).setPositiveButton("删除",(d,w)->{try{new AiProviders(this).delete(id);key.getText().clear();aiSettings();}catch(Exception e){error.setText("删除未完成，请重试。");}}).create();dialog.show();styleDialog(dialog,true);});delete.setTextColor(DANGER);delete.setBackgroundTintList(android.content.res.ColorStateList.valueOf(SOFT));delete.setTag("ai-key-delete");}
+  action(actions,"保存",()->{try{new AiProviders(this).save(new AiProviders.Config(id,name.getText().toString(),base.getText().toString(),model.getText().toString(),key.getText().toString(),protocol.getSelectedItemPosition()==0,reasoning.isChecked()));key.getText().clear();backPage();}catch(Exception e){error.setText(e instanceof IllegalArgumentException?e.getMessage():"配置未保存，请检查输入或稍后重试。");}}).setTag("ai-key-save");
+  if(existing!=null){Button delete=action(actions,"删除",()->{AlertDialog dialog=new AlertDialog.Builder(this,R.style.SecondaryDialog).setTitle("删除此供应商？").setMessage("将删除本机保存的这份配置和密钥，聊天记录会保留。").setNegativeButton("取消",null).setPositiveButton("删除",(d,w)->{try{new AiProviders(this).delete(id);key.getText().clear();backPage();}catch(Exception e){error.setText("删除未完成，请重试。");}}).create();dialog.show();styleDialog(dialog,true);});delete.setTextColor(DANGER);delete.setBackgroundTintList(android.content.res.ColorStateList.valueOf(SOFT));delete.setTag("ai-key-delete");}
  }
  private void aiPhoneSettings(){
   if(aiSending){toast("请先停止当前回复");return;}
@@ -514,9 +521,10 @@ public class MainActivity extends Activity {
 
  private void aiAttachments(View anchor,TextView strength){
   if(aiAttachmentMenu!=null){aiAttachmentMenu.close(true);return;}
-  View focus=aiPage==null?getCurrentFocus():aiPage.findFocus();NavigationOverlay menu=new NavigationOverlay(true,"添加附件",anchor);aiAttachmentMenu=menu;menu.menuWidth=264;menu.panel.setTag("ai-attachment-menu");menu.body.setPadding(dp(12),dp(12),dp(12),dp(12));
+  View focus=aiPage==null?getCurrentFocus():aiPage.findFocus();NavigationOverlay menu=new NavigationOverlay(true,"添加附件",anchor);aiAttachmentMenu=menu;menu.menuWidth=264;menu.overlapsAnchor=true;menu.panel.setTag("ai-attachment-menu");menu.body.setPadding(dp(12),dp(12),dp(12),0);
   String[] names={"拍照","照片","文件","推理强度"},tags={"camera","photo","file","strength"};int[] icons={R.drawable.ic_ai_camera,R.drawable.ic_ai_photo,R.drawable.ic_ai_attach,R.drawable.ic_strength};
   for(int i=0;i<names.length;i++){int item=i;LinearLayout row=new LinearLayout(this);row.setTag("ai-attach-"+tags[i]);row.setGravity(Gravity.CENTER_VERTICAL);row.setPadding(dp(4),dp(4),dp(8),dp(4));row.setMinimumHeight(dp(60));row.setFocusable(true);ImageView icon=new ImageView(this);icon.setImageResource(icons[i]);icon.setColorFilter(i==3?PRIMARY:INK);icon.setPadding(dp(12),dp(12),dp(12),dp(12));icon.setBackground(bg(SOFT,24));icon.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO);row.addView(icon,new LinearLayout.LayoutParams(dp(44),dp(44)));TextView name=text(names[i],18,i==3?PRIMARY:INK);name.setTypeface(null,Typeface.BOLD);name.setPadding(dp(12),0,0,0);row.addView(name,new LinearLayout.LayoutParams(0,-2,1));if(i==3)row.addView(text("✓",20,PRIMARY));row.setContentDescription(names[i]+(i==0||i==1?"，添加给云端 AI 查看":i==2?"，支持图片、文本、PDF 和 DOCX":""));row.setOnClickListener(v->{menu.close(true);if(item==3)aiStrength(strength);else aiOpenAttachment(item);});focusOutline(row);menu.body.addView(row,new LinearLayout.LayoutParams(-1,-2));}
+  LinearLayout footer=new LinearLayout(this);footer.setPadding(dp(12),0,dp(12),dp(12));TextView toggle=icon(R.drawable.ic_close,"关闭添加菜单",()->menu.close(true));toggle.setTag("ai-attach-toggle");toggle.setBackground(null);footer.addView(toggle,new LinearLayout.LayoutParams(dp(48),dp(48)));menu.panel.addView(footer,new LinearLayout.LayoutParams(-1,-2));
   if(focus instanceof EditText){menu.returnFocus=focus;focus.requestFocus();}
  }
  private void aiOpenAttachment(int item){

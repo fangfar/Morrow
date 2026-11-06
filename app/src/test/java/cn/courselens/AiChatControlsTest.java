@@ -55,4 +55,12 @@ public class AiChatControlsTest {
    MainActivity a=c.get();shadowOf((Application)a.getApplication()).denyPermissions(android.Manifest.permission.RECORD_AUDIO);callInstanceMethod(a,"aiAssistant");((View)getField(a,"root")).findViewWithTag("ai-mic").performClick();a.onRequestPermissionsResult(908,new String[]{android.Manifest.permission.RECORD_AUDIO},new int[]{android.content.pm.PackageManager.PERMISSION_DENIED});AlertDialog dialog=org.robolectric.shadows.ShadowAlertDialog.getLatestAlertDialog();assertNotNull(dialog);assertEquals("前往设置",dialog.getButton(AlertDialog.BUTTON_POSITIVE).getText().toString());
   }
  }
+ @Test public void attachmentMenuCoversItsPlusAndKeepsTheCloseTargetInPlace(){
+  for(String viewport:new String[]{"w400dp-h850dp-notnight","w320dp-h400dp-notnight"}){
+   RuntimeEnvironment.setQualifiers(viewport);RuntimeEnvironment.setFontScale(viewport.startsWith("w320")?1.6f:1f);
+   try(ActivityController<MainActivity> c=Robolectric.buildActivity(MainActivity.class).setup().visible()){
+    MainActivity a=c.get();callInstanceMethod(a,"aiAssistant");((PageMotion)getField(a,"pageMotion")).cancel();layout(a);View chat=getField(a,"root"),plus=chat.findViewWithTag("ai-attach");plus.performClick();layout(a);MainActivity.NavigationOverlay menu=getField(a,"aiAttachmentMenu");menu.motion.set(1);View toggle=menu.findViewWithTag("ai-attach-toggle");Rect anchor=new Rect(),panel=new Rect(),close=new Rect();plus.getGlobalVisibleRect(anchor);menu.panel.getGlobalVisibleRect(panel);toggle.getGlobalVisibleRect(close);assertTrue("Menu must cover the original plus",panel.contains(anchor));assertEquals(anchor.centerX(),close.centerX(),1);assertEquals(anchor.centerY(),close.centerY(),1);assertTrue(panel.top>=0);toggle.performClick();assertFalse(menu.open);
+   }
+  }
+ }
 }

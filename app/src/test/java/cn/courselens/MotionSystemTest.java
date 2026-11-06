@@ -110,4 +110,11 @@ public class MotionSystemTest {
   }
  }
 
+ @Test public void apiConfigurationReturnsToRetainedChatAndEditorReturnsToItsList(){
+  try(ActivityController<MainActivity> c=Robolectric.buildActivity(MainActivity.class).setup().visible()){
+   MainActivity a=c.get();org.robolectric.util.ReflectionHelpers.callInstanceMethod(a,"tasks");org.robolectric.util.ReflectionHelpers.callInstanceMethod(a,"aiAssistant");PageMotion motion=org.robolectric.util.ReflectionHelpers.getField(a,"pageMotion");motion.cancel();layout(a.findViewById(android.R.id.content));View chat=org.robolectric.util.ReflectionHelpers.getField(a,"root");((EditText)chat.findViewWithTag("ai-message")).setText("保留返回草稿");
+   org.robolectric.util.ReflectionHelpers.callInstanceMethod(a,"aiSettings");motion.cancel();layout(a.findViewById(android.R.id.content));a.onBackPressed();assertTrue("API list must exit towards the right",motion.isReturning());assertSame(chat,org.robolectric.util.ReflectionHelpers.getField(a,"root"));assertEquals("保留返回草稿",((EditText)chat.findViewWithTag("ai-message")).getText().toString());motion.cancel();
+   org.robolectric.util.ReflectionHelpers.callInstanceMethod(a,"aiSettings");motion.cancel();org.robolectric.util.ReflectionHelpers.callInstanceMethod(a,"aiEditProvider",org.robolectric.util.ReflectionHelpers.ClassParameter.from(AiProviders.Config.class,null));motion.cancel();layout(a.findViewById(android.R.id.content));a.onBackPressed();assertTrue("API editor must return rather than enter another list",motion.isReturning());View list=org.robolectric.util.ReflectionHelpers.getField(a,"root");assertEquals("API 配置",list.getTag());
+  }
+ }
 }
