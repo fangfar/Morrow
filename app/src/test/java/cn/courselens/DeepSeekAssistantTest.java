@@ -25,6 +25,16 @@ public class DeepSeekAssistantTest {
    MainActivity a=c.get();callInstanceMethod(a,"aiAssistant");View page=getField(a,"root");assertNull(page.findViewWithTag("ai-new-chat"));TextView title=(TextView)((LinearLayout)((LinearLayout)page).getChildAt(0)).getChildAt(1);assertFalse(title.hasOnClickListeners());View strength=page.findViewWithTag("ai-strength");assertNotSame(title,strength);page.findViewWithTag("ai-temporary-chat").performClick();AiChats store=callInstanceMethod(a,"aiStore");store.messages(new JSONArray().put(new JSONObject().put("role","user").put("content","临时内容")));assertEquals(0,new AiChats(a).chat().getJSONArray("messages").length());((View)getField(a,"root")).findViewWithTag("ai-temporary-chat").performClick();assertEquals(0,((JSONArray)getField(a,"aiChat")).length());
   }
  }
+ @Test public void aiBackReturnsToTimetableAndTimetableMenuHasNoAiEntry()throws Exception{
+  try(ActivityController<MainActivity> c=Robolectric.buildActivity(MainActivity.class).setup()){
+   MainActivity a=c.get();callInstanceMethod(a,"menu");callInstanceMethod(a,"aiAssistant");Runnable back=getField(a,"pageBack");back.run();assertTrue(a.findViewById(android.R.id.content).findViewWithTag("nav-timetable").isSelected());assertFalse((boolean)getField(a,"aiVisible"));callInstanceMethod(a,"timetableSettings");View content=a.findViewById(android.R.id.content);assertNull(content.findViewWithTag("timetable-ai"));assertNotNull(content.findViewWithTag("timetable-add-course"));
+  }
+ }
+ @Test public void sendAndStopUseCenteredIconsWithAccessibleLabels()throws Exception{
+  try(ActivityController<MainActivity> c=Robolectric.buildActivity(MainActivity.class).setup()){
+   MainActivity a=c.get();callInstanceMethod(a,"aiAssistant");Button send=((View)getField(a,"root")).findViewWithTag("ai-send");assertEquals("",send.getText().toString());assertNotNull(send.getCompoundDrawables()[0]);assertEquals("发送消息",send.getContentDescription());callInstanceMethod(a,"aiSendState",ClassParameter.from(Button.class,send),ClassParameter.from(boolean.class,true));assertEquals("停止生成",send.getContentDescription());assertEquals("",send.getText().toString());
+  }
+ }
  @Test public void projectFlowCreatesOnlyNamedProjects()throws Exception{
   try(ActivityController<MainActivity> c=Robolectric.buildActivity(MainActivity.class).setup()){
    MainActivity a=c.get();callInstanceMethod(a,"aiCreateProject");View root=getField(a,"root");Button create=root.findViewWithTag("ai-project-create");EditText name=root.findViewWithTag("ai-project-name");assertFalse(create.isEnabled());name.setText("  ");assertFalse(create.isEnabled());name.setText("电路复习");assertTrue(create.isEnabled());create.performClick();AiChats store=callInstanceMethod(a,"aiStore");assertEquals("电路复习",store.project().getString("name"));assertNotNull(((View)getField(a,"root")).findViewWithTag("ai-message"));

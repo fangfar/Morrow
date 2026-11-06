@@ -31,7 +31,7 @@ final class SideNavigation extends FrameLayout {
   super(activity);this.activity=activity;this.settings=settings;this.content=content;this.surface=surface;this.ink=ink;ui=new SecondaryUi(activity);setTag("side-navigation");setBackgroundColor(card);
   panel=new LinearLayout(activity);panel.setOrientation(LinearLayout.VERTICAL);panel.setFocusableInTouchMode(true);panel.setBackgroundColor(card);panel.setPadding(ui.dp(16),ui.dp(20),ui.dp(8),ui.dp(16));panel.setTag("side-navigation-panel");panel.setVisibility(GONE);if(Build.VERSION.SDK_INT>=28)panel.setAccessibilityPaneTitle("导航菜单");addView(panel,new LayoutParams(0,-1,Gravity.LEFT));
   panel.setOnApplyWindowInsetsListener((view,insets)->{view.setPadding(ui.dp(16),insets.getSystemWindowInsetTop()+ui.dp(20),ui.dp(8),insets.getSystemWindowInsetBottom()+ui.dp(16));return insets;});
-  TextView title=ui.text("Morrow",28,ink);title.setPadding(ui.dp(8),ui.dp(24),0,ui.dp(36));panel.addView(title);
+  TextView title=ui.text("Morrow",28,ink);title.setPadding(ui.dp(8),ui.dp(24),0,ui.dp(24));panel.addView(title);
   ScrollView scroll=new ScrollView(activity);panel.addView(scroll,new LinearLayout.LayoutParams(-1,0,1));items=new LinearLayout(activity);items.setOrientation(LinearLayout.VERTICAL);scroll.addView(items);
   String[] names={"课表","任务","快递","AI 助手"},tags={"drawer-timetable","drawer-tasks","drawer-parcels","drawer-ai"};int[] icons={R.drawable.ic_calendar,R.drawable.ic_tasks,R.drawable.ic_parcel,R.drawable.ic_chat};
   for(int i=0;i<names.length;i++){int index=i;destinations[i]=item(names[i],icons[i],tags[i],()->choose(()->navigate.accept(index)));items.addView(destinations[i],new LinearLayout.LayoutParams(-1,-2));}
@@ -51,7 +51,7 @@ final class SideNavigation extends FrameLayout {
  }
  void route(Runnable action){choose(action);}
  private TextView item(String title,int drawable,String tag,Runnable action){
-  TextView item=ui.text(title,20,ink);item.setTag(tag);item.setGravity(Gravity.CENTER_VERTICAL);item.setPadding(ui.dp(16),ui.dp(20),ui.dp(12),ui.dp(20));item.setMinHeight(ui.dp(68));item.setFocusable(true);
+  TextView item=ui.text(title,20,ink);item.setTag(tag);item.setGravity(Gravity.CENTER_VERTICAL);item.setPadding(ui.dp(16),ui.dp(14),ui.dp(12),ui.dp(14));item.setMinHeight(ui.dp(60));item.setFocusable(true);
   android.graphics.drawable.Drawable icon=activity.getDrawable(drawable).mutate();icon.setTint(ink);icon.setBounds(0,0,ui.dp(24),ui.dp(24));item.setCompoundDrawables(icon,null,null,null);item.setCompoundDrawablePadding(ui.dp(16));item.setOnClickListener(v->action.run());ui.focusOutline(item);return item;
  }
  void select(int selected){
