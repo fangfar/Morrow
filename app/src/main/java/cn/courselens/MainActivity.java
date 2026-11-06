@@ -177,7 +177,7 @@ public class MainActivity extends Activity {
 
  private NavigationOverlay sheetMenu(String title){return new NavigationOverlay(true,title);}
  class NavigationOverlay extends MotionOverlay {
-  final boolean corner;final View anchor;final LinearLayout panel,body;final View shade;final LinearLayout underneath;final Runnable underneathBack;final NavigationOverlay previous;
+  final boolean corner;final View anchor;View returnFocus;final LinearLayout panel,body;final View shade;final LinearLayout underneath;final Runnable underneathBack;final NavigationOverlay previous;
   final int accessibility;final boolean underneathDetail;boolean fitContent;boolean open=true;int menuWidth=SecondaryUi.MENU_WIDTH;int preferredMenuTop,menuAnchorHeight=dp(48);
   NavigationOverlay(boolean corner,String title){this(corner,title,null);}
   NavigationOverlay(boolean corner,String title,View anchor){
@@ -209,7 +209,7 @@ public class MainActivity extends Activity {
    scheduleRemoteNotice();if(animate&&!open)return;open=false;exitingOverlay=this;underneath.setImportantForAccessibility(accessibility);
    if(navigationOverlay==this){navigationOverlay=previous;root=underneath;pageBack=underneathBack;showingDetail=underneathDetail;if(previous!=null)previous.setVisibility(VISIBLE);updateSystemBack();}
    setImportantForAccessibility(IMPORTANT_FOR_ACCESSIBILITY_NO_HIDE_DESCENDANTS);
-   hideMotion(animate,()->{windowContent.removeView(this);if(aiAttachmentMenu==this)aiAttachmentMenu=null;if(exitingOverlay==this)exitingOverlay=null;View focus=corner?(anchor!=null?anchor:underneath.findViewWithTag("sheet-action-button")):underneath;if(focus==null)focus=underneath;if(navigationOverlay==previous&&focus.isAttachedToWindow())focus.requestFocus();updateOverlayAppearance();updateSystemBack();});
+   hideMotion(animate,()->{windowContent.removeView(this);if(aiAttachmentMenu==this)aiAttachmentMenu=null;if(exitingOverlay==this)exitingOverlay=null;View focus=returnFocus!=null?returnFocus:corner?(anchor!=null?anchor:underneath.findViewWithTag("sheet-action-button")):underneath;if(focus==null)focus=underneath;if(navigationOverlay==previous&&focus.isAttachedToWindow())focus.requestFocus();updateOverlayAppearance();updateSystemBack();});
   }
  }
  private LinearLayout panel(LinearLayout body){
@@ -517,7 +517,7 @@ public class MainActivity extends Activity {
   View focus=aiPage==null?getCurrentFocus():aiPage.findFocus();NavigationOverlay menu=new NavigationOverlay(true,"添加附件",anchor);aiAttachmentMenu=menu;menu.menuWidth=264;menu.panel.setTag("ai-attachment-menu");menu.body.setPadding(dp(12),dp(12),dp(12),dp(12));
   String[] names={"拍照","照片","文件","推理强度"},tags={"camera","photo","file","strength"};int[] icons={R.drawable.ic_ai_camera,R.drawable.ic_ai_photo,R.drawable.ic_ai_attach,R.drawable.ic_strength};
   for(int i=0;i<names.length;i++){int item=i;LinearLayout row=new LinearLayout(this);row.setTag("ai-attach-"+tags[i]);row.setGravity(Gravity.CENTER_VERTICAL);row.setPadding(dp(4),dp(4),dp(8),dp(4));row.setMinimumHeight(dp(60));row.setFocusable(true);ImageView icon=new ImageView(this);icon.setImageResource(icons[i]);icon.setColorFilter(i==3?PRIMARY:INK);icon.setPadding(dp(12),dp(12),dp(12),dp(12));icon.setBackground(bg(SOFT,24));icon.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO);row.addView(icon,new LinearLayout.LayoutParams(dp(44),dp(44)));TextView name=text(names[i],18,i==3?PRIMARY:INK);name.setTypeface(null,Typeface.BOLD);name.setPadding(dp(12),0,0,0);row.addView(name,new LinearLayout.LayoutParams(0,-2,1));if(i==3)row.addView(text("✓",20,PRIMARY));row.setContentDescription(names[i]+(i==0||i==1?"，添加给云端 AI 查看":i==2?"，支持图片、文本、PDF 和 DOCX":""));row.setOnClickListener(v->{menu.close(true);if(item==3)aiStrength(strength);else aiOpenAttachment(item);});focusOutline(row);menu.body.addView(row,new LinearLayout.LayoutParams(-1,-2));}
-  if(focus instanceof EditText)focus.requestFocus();
+  if(focus instanceof EditText){menu.returnFocus=focus;focus.requestFocus();}
  }
  private void aiOpenAttachment(int item){
   aiAttachmentPage=aiPage;try{if(item==0){java.io.File dir=new java.io.File(getCacheDir(),"ai-capture");if(!dir.isDirectory()&&!dir.mkdirs())throw new java.io.IOException();aiCaptureFile=java.io.File.createTempFile("capture-",".jpg",dir);android.net.Uri uri=androidx.core.content.FileProvider.getUriForFile(this,getPackageName()+".ocr.files",aiCaptureFile);Intent capture=new Intent(android.provider.MediaStore.ACTION_IMAGE_CAPTURE).putExtra(android.provider.MediaStore.EXTRA_OUTPUT,uri).addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION|Intent.FLAG_GRANT_WRITE_URI_PERMISSION);capture.setClipData(ClipData.newRawUri("拍照识字",uri));startActivityForResult(capture,900);}else if(item==1)ImagePicker.open(this,901);else if(item==2)startActivityForResult(new Intent(Intent.ACTION_OPEN_DOCUMENT).addCategory(Intent.CATEGORY_OPENABLE).setType("*/*").putExtra(Intent.EXTRA_MIME_TYPES,new String[]{"image/*","text/*","application/pdf","application/vnd.openxmlformats-officedocument.wordprocessingml.document"}),902);}catch(Exception e){aiClearCapture();toast("无法打开，请检查相应系统应用后重试。");}
