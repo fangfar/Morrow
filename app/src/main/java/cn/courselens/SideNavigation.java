@@ -16,6 +16,7 @@ final class SideNavigation extends FrameLayout {
  private final View content,shade;
  private final FrameLayout foreground;
  private final LinearLayout panel,items,footer;
+ private final Runnable settings;
  private final TextView[] destinations=new TextView[4];
  private final int surface,ink;
  private Object back;
@@ -27,8 +28,8 @@ final class SideNavigation extends FrameLayout {
  private float backStart,dragStart,dragProgress,releaseVelocity;private boolean dragging;private VelocityTracker velocity;
 
  SideNavigation(Activity activity,View content,int surface,int card,int ink,IntConsumer navigate,Runnable settings){
-  super(activity);this.activity=activity;this.content=content;this.surface=surface;this.ink=ink;ui=new SecondaryUi(activity);setTag("side-navigation");setBackgroundColor(card);
-  panel=new LinearLayout(activity);panel.setOrientation(LinearLayout.VERTICAL);panel.setBackgroundColor(card);panel.setPadding(ui.dp(16),ui.dp(20),ui.dp(8),ui.dp(16));panel.setTag("side-navigation-panel");panel.setVisibility(GONE);if(Build.VERSION.SDK_INT>=28)panel.setAccessibilityPaneTitle("导航菜单");addView(panel,new LayoutParams(0,-1,Gravity.LEFT));
+  super(activity);this.activity=activity;this.settings=settings;this.content=content;this.surface=surface;this.ink=ink;ui=new SecondaryUi(activity);setTag("side-navigation");setBackgroundColor(card);
+  panel=new LinearLayout(activity);panel.setOrientation(LinearLayout.VERTICAL);panel.setFocusableInTouchMode(true);panel.setBackgroundColor(card);panel.setPadding(ui.dp(16),ui.dp(20),ui.dp(8),ui.dp(16));panel.setTag("side-navigation-panel");panel.setVisibility(GONE);if(Build.VERSION.SDK_INT>=28)panel.setAccessibilityPaneTitle("导航菜单");addView(panel,new LayoutParams(0,-1,Gravity.LEFT));
   panel.setOnApplyWindowInsetsListener((view,insets)->{view.setPadding(ui.dp(16),insets.getSystemWindowInsetTop()+ui.dp(20),ui.dp(8),insets.getSystemWindowInsetBottom()+ui.dp(16));return insets;});
   TextView title=ui.text("Morrow",28,ink);title.setPadding(ui.dp(8),ui.dp(24),0,ui.dp(36));panel.addView(title);
   ScrollView scroll=new ScrollView(activity);panel.addView(scroll,new LinearLayout.LayoutParams(-1,0,1));items=new LinearLayout(activity);items.setOrientation(LinearLayout.VERTICAL);scroll.addView(items);
@@ -40,13 +41,17 @@ final class SideNavigation extends FrameLayout {
  }
  void setExtra(View extra){while(items.getChildCount()>destinations.length)items.removeViewAt(destinations.length);if(extra!=null)items.addView(extra);}
  void setChatTools(View search,Runnable newChat){
-  while(footer.getChildCount()>1)footer.removeViewAt(1);footer.setGravity(Gravity.CENTER_VERTICAL);
-  search.setBackground(ui.bg(surface,28));search.setPadding(ui.dp(12),0,ui.dp(8),0);footer.addView(search,new LinearLayout.LayoutParams(0,ui.dp(48),1));
-  Button fresh=ui.iconAction(footer,R.drawable.ic_new_chat,"新聊天",()->choose(newChat));fresh.setTag("ai-history-new-chat");fresh.getCompoundDrawables()[0].setTint(ink);fresh.setBackground(ui.bg(surface,24));
+  footer.removeAllViews();footer.setGravity(Gravity.CENTER_VERTICAL);
+  Button fresh=ui.action(footer,"聊天",()->choose(newChat));fresh.setTag("ai-history-new-chat");fresh.setCompoundDrawablesWithIntrinsicBounds(R.drawable.ic_new_chat,0,0,0);fresh.getCompoundDrawables()[0].setTint(ui.ON_PRIMARY);fresh.setCompoundDrawablePadding(ui.dp(8));fresh.setLayoutParams(new LinearLayout.LayoutParams(-2,ui.dp(48)));
+  footer.addView(new View(activity),new LinearLayout.LayoutParams(0,1,1));
+  Button avatar=ui.iconAction(footer,R.drawable.ic_person,"设置",()->choose(settings));avatar.setTag("drawer-settings");
+  if(panel.findViewWithTag("ai-history-search")!=null){View old=panel.findViewWithTag("ai-history-search");((android.view.ViewGroup)old.getParent()).removeView(old);}
+  search.setVisibility(GONE);panel.addView(search,1,new LinearLayout.LayoutParams(-1,ui.dp(48)));
+  TextView title=(TextView)panel.getChildAt(0);title.setCompoundDrawablesWithIntrinsicBounds(0,0,R.drawable.ic_search,0);title.getCompoundDrawables()[2].setTint(ink);title.setContentDescription("Morrow，点击搜索聊天");title.setOnClickListener(v->{search.setVisibility(VISIBLE);search.requestFocus();((android.view.inputmethod.InputMethodManager)activity.getSystemService(android.content.Context.INPUT_METHOD_SERVICE)).showSoftInput(search,android.view.inputmethod.InputMethodManager.SHOW_IMPLICIT);});
  }
  void route(Runnable action){choose(action);}
  private TextView item(String title,int drawable,String tag,Runnable action){
-  TextView item=ui.text(title,20,ink);item.setTag(tag);item.setGravity(Gravity.CENTER_VERTICAL);item.setPadding(ui.dp(16),ui.dp(14),ui.dp(12),ui.dp(14));item.setMinHeight(ui.dp(56));item.setFocusable(true);
+  TextView item=ui.text(title,20,ink);item.setTag(tag);item.setGravity(Gravity.CENTER_VERTICAL);item.setPadding(ui.dp(16),ui.dp(20),ui.dp(12),ui.dp(20));item.setMinHeight(ui.dp(68));item.setFocusable(true);
   android.graphics.drawable.Drawable icon=activity.getDrawable(drawable).mutate();icon.setTint(ink);icon.setBounds(0,0,ui.dp(24),ui.dp(24));item.setCompoundDrawables(icon,null,null,null);item.setCompoundDrawablePadding(ui.dp(16));item.setOnClickListener(v->action.run());ui.focusOutline(item);return item;
  }
  void select(int selected){
@@ -55,9 +60,9 @@ final class SideNavigation extends FrameLayout {
  boolean isOpen(){return panel.getVisibility()==VISIBLE;}
  boolean isRouting(){return routing;}
  void open(int selected){
-  if(open||routing)return;select(selected);open=true;if(!isOpen()){previousFocus=activity.getCurrentFocus();contentAccessibility=content.getImportantForAccessibility();}content.setImportantForAccessibility(IMPORTANT_FOR_ACCESSIBILITY_NO_HIDE_DESCENDANTS);panel.setVisibility(VISIBLE);panel.requestApplyInsets();shade.setVisibility(VISIBLE);
+  if(open||routing)return;select(selected);open=true;if(!isOpen()){previousFocus=activity.getCurrentFocus();contentAccessibility=content.getImportantForAccessibility();}content.clearFocus();((android.view.inputmethod.InputMethodManager)activity.getSystemService(android.content.Context.INPUT_METHOD_SERVICE)).hideSoftInputFromWindow(getWindowToken(),0);panel.requestFocus();content.setImportantForAccessibility(IMPORTANT_FOR_ACCESSIBILITY_NO_HIDE_DESCENDANTS);panel.setVisibility(VISIBLE);panel.requestApplyInsets();shade.setVisibility(VISIBLE);
   if(Build.VERSION.SDK_INT>=33&&!backRegistered){back=MotionBack.register(activity.getWindow(),1000000,()->{backStart=progress;motion.stop();},p->{if(!routing){motion.set(backStart*(1-p));}},()->{if(!routing){open=true;animateTo(1,true);}},()->close(true));backRegistered=true;}
-  destinations[selected].requestFocus();animateTo(1f,true);
+  panel.requestFocus();animateTo(1f,true);
  }
  boolean close(boolean animate){
   // While a destination route owns the close, back/shade taps must not finish the host page.
