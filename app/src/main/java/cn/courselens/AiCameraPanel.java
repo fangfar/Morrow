@@ -31,7 +31,6 @@ final class AiCameraPanel extends Dialog implements LifecycleOwner {
   controls.addView(new View(context),new LinearLayout.LayoutParams(0,1,1));
   ImageButton flip=icon(context,R.drawable.ic_sync,"切换前后摄像头");flip.setOnClickListener(v->{if(capturing)return;try{CameraSelector next=camera.getCameraSelector()==CameraSelector.DEFAULT_BACK_CAMERA?CameraSelector.DEFAULT_FRONT_CAMERA:CameraSelector.DEFAULT_BACK_CAMERA;if(camera.hasCamera(next))camera.setCameraSelector(next);else message("没有可切换的摄像头");}catch(RuntimeException e){message("暂时无法切换摄像头");}});controls.addView(flip,new LinearLayout.LayoutParams(dp(56),dp(56)));
   panel.addView(controls,new FrameLayout.LayoutParams(-1,-2,Gravity.BOTTOM));
-  TextView hint=new TextView(context);hint.setText("双指缩放 · 轻点对焦");hint.setTextColor(Color.WHITE);hint.setGravity(Gravity.CENTER);hint.setPadding(dp(12),dp(8),dp(12),dp(8));GradientDrawable caption=new GradientDrawable();caption.setColor(0xcc202020);caption.setCornerRadius(dp(20));hint.setBackground(caption);FrameLayout.LayoutParams hintBounds=new FrameLayout.LayoutParams(-2,-2,Gravity.TOP|Gravity.CENTER_HORIZONTAL);hintBounds.topMargin=dp(16);panel.addView(hint,hintBounds);
   setContentView(panel);setOnDismissListener(d->{camera.unbind();lifecycle.setCurrentState(Lifecycle.State.DESTROYED);});
  }
  @NonNull @Override public Lifecycle getLifecycle(){return lifecycle;}

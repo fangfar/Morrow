@@ -40,14 +40,12 @@ final class SideNavigation extends FrameLayout {
   shade=new View(activity);shade.setTag("drawer-shade");shade.setBackgroundColor(android.graphics.Color.BLACK);shade.setContentDescription("关闭导航菜单");shade.setFocusable(true);shade.setOnClickListener(v->close(true));shade.setVisibility(GONE);foreground.addView(shade,new LayoutParams(-1,-1));
  }
  void setExtra(View extra){while(items.getChildCount()>destinations.length)items.removeViewAt(destinations.length);if(extra!=null)items.addView(extra);}
- void setChatTools(View search,Runnable newChat){
+ void setChatTools(Runnable newChat){
   footer.removeAllViews();footer.setGravity(Gravity.CENTER_VERTICAL);
   Button fresh=ui.action(footer,"聊天",()->choose(newChat));fresh.setTag("ai-history-new-chat");fresh.setCompoundDrawablesWithIntrinsicBounds(R.drawable.ic_new_chat,0,0,0);fresh.getCompoundDrawables()[0].setTint(ui.ON_PRIMARY);fresh.setCompoundDrawablePadding(ui.dp(8));fresh.setLayoutParams(new LinearLayout.LayoutParams(-2,ui.dp(48)));
   footer.addView(new View(activity),new LinearLayout.LayoutParams(0,1,1));
   Button avatar=ui.iconAction(footer,R.drawable.ic_person,"设置",()->choose(settings));avatar.setTag("drawer-settings");
-  if(panel.findViewWithTag("ai-history-search")!=null){View old=panel.findViewWithTag("ai-history-search");((android.view.ViewGroup)old.getParent()).removeView(old);}
-  search.setVisibility(GONE);panel.addView(search,1,new LinearLayout.LayoutParams(-1,ui.dp(48)));
-  TextView title=(TextView)panel.getChildAt(0);title.setCompoundDrawablesWithIntrinsicBounds(0,0,R.drawable.ic_search,0);title.getCompoundDrawables()[2].setTint(ink);title.setContentDescription("Morrow，点击搜索聊天");title.setOnClickListener(v->{search.setVisibility(VISIBLE);search.requestFocus();((android.view.inputmethod.InputMethodManager)activity.getSystemService(android.content.Context.INPUT_METHOD_SERVICE)).showSoftInput(search,android.view.inputmethod.InputMethodManager.SHOW_IMPLICIT);});
+
  }
  void route(Runnable action){choose(action);}
  private TextView item(String title,int drawable,String tag,Runnable action){

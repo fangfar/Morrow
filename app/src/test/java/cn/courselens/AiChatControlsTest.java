@@ -18,9 +18,17 @@ import static org.robolectric.util.ReflectionHelpers.*;
 
 @RunWith(RobolectricTestRunner.class) @Config(sdk=34) @GraphicsMode(GraphicsMode.Mode.NATIVE)
 public class AiChatControlsTest {
+ @Test public void reasoningCoverageIncreasesWithEachLevel(){
+  long previous=-1;for(int level=0;level<4;level++){Bitmap bitmap=Bitmap.createBitmap(96,96,Bitmap.Config.ARGB_8888);AiStrengthIcon icon=new AiStrengthIcon(level,0xffec6aaa);icon.setBounds(0,0,96,96);icon.draw(new Canvas(bitmap));long coverage=0;for(int y=0;y<96;y++)for(int x=0;x<96;x++)coverage+=Color.alpha(bitmap.getPixel(x,y));assertTrue("Coverage must grow at level "+level,coverage>previous);previous=coverage;bitmap.recycle();}
+ }
+ @Test public void projectMemoryUsesATopAlignedMultilineEditorAndPinnedActions(){
+  try(ActivityController<MainActivity> c=Robolectric.buildActivity(MainActivity.class).setup()){
+   MainActivity a=c.get();callInstanceMethod(a,"menu");callInstanceMethod(a,"aiMemory");layout(a);View root=getField(a,"root");EditText editor=root.findViewWithTag("ai-memory-editor");assertNotNull(editor);assertEquals(Gravity.TOP,editor.getGravity()&Gravity.VERTICAL_GRAVITY_MASK);assertEquals(android.text.InputType.TYPE_TEXT_FLAG_MULTI_LINE,editor.getInputType()&android.text.InputType.TYPE_TEXT_FLAG_MULTI_LINE);assertTrue(editor.getHeight()>=editor.getLineHeight()*8);assertEquals(3,((ViewGroup)root).getChildCount());
+  }
+ }
  @Test public void settingsExposeConfigurationAndVoiceStatusWithoutOpeningChat(){
   try(ActivityController<MainActivity> c=Robolectric.buildActivity(MainActivity.class).setup()){
-   MainActivity a=c.get();callInstanceMethod(a,"menu");View settings=getField(a,"root");assertNull(settings.findViewWithTag("ai-assistant"));assertNotNull(settings.findViewWithTag("settings-ai-info"));settings.findViewWithTag("settings-api").performClick();assertEquals("API 配置",((View)getField(a,"root")).getTag());callInstanceMethod(a,"backPage");assertSame(settings,getField(a,"root"));settings.findViewWithTag("settings-ai-voice").performClick();assertNotNull(((View)getField(a,"root")).findViewWithTag("voice-permission"));assertNotNull(((View)getField(a,"root")).findViewWithTag("voice-service"));
+   MainActivity a=c.get();callInstanceMethod(a,"menu");View settings=getField(a,"root");assertNull(settings.findViewWithTag("ai-assistant"));assertNotNull(settings.findViewWithTag("settings-ai-info"));settings.findViewWithTag("settings-api").performClick();assertEquals("API 配置",((View)getField(a,"root")).getTag());callInstanceMethod(a,"backPage");assertSame(settings,getField(a,"root"));settings.findViewWithTag("settings-ai-voice").performClick();assertNull(((View)getField(a,"root")).findViewWithTag("voice-permission"));assertNotNull(((View)getField(a,"root")).findViewWithTag("voice-service"));
   }
  }
  @Test public void cameraAsksPermissionBeforeOpeningTheInAppPreview(){
@@ -46,9 +54,9 @@ public class AiChatControlsTest {
    chat.findViewWithTag("ai-history-button").performClick();SideNavigation drawer=getField(a,"sideNavigation");drawer.findViewWithTag("drawer-settings").performClick();shadowOf(Looper.getMainLooper()).idleFor(Duration.ofMillis(500));((Runnable)getField(a,"pageBack")).run();assertSame(chat,getField(a,"root"));assertEquals("保留草稿",input.getText().toString());assertEquals(2,input.getSelectionStart());assertEquals(3,(int)callInstanceMethod(a,"primaryTab"));
   }
  }
- @Test public void microphoneRequestsTheSystemPermissionOnFirstUse(){
+ @Test public void microphoneDelegatesToSystemWithoutRequestingAppPermissions(){
   try(ActivityController<MainActivity> c=Robolectric.buildActivity(MainActivity.class).setup()){
-   MainActivity a=c.get();shadowOf((Application)a.getApplication()).denyPermissions(android.Manifest.permission.RECORD_AUDIO);callInstanceMethod(a,"aiAssistant");((View)getField(a,"root")).findViewWithTag("ai-mic").performClick();org.robolectric.shadows.ShadowActivity.PermissionsRequest request=shadowOf(a).getLastRequestedPermission();assertNotNull(request);assertEquals(908,request.requestCode);assertArrayEquals(new String[]{android.Manifest.permission.RECORD_AUDIO},request.requestedPermissions);
+   MainActivity a=c.get();callInstanceMethod(a,"aiAssistant");((View)getField(a,"root")).findViewWithTag("ai-mic").performClick();org.robolectric.shadows.ShadowActivity.IntentForResult request=shadowOf(a).getNextStartedActivityForResult();assertEquals(904,request.requestCode);assertEquals(android.speech.RecognizerIntent.ACTION_RECOGNIZE_SPEECH,request.intent.getAction());assertEquals(android.speech.RecognizerIntent.LANGUAGE_MODEL_FREE_FORM,request.intent.getStringExtra(android.speech.RecognizerIntent.EXTRA_LANGUAGE_MODEL));assertNull(shadowOf(a).getLastRequestedPermission());
   }
  }
  @Test public void editableKeyAndPairedActionsStaySideBySideInEveryAppearance()throws Exception{
@@ -60,14 +68,14 @@ public class AiChatControlsTest {
    }
   }
  }
- @Test public void permanentlyDeniedMicrophoneOffersTheAppPermissionPage(){
+ @Test public void speechActivityCancellationKeepsTheDraft(){
   try(ActivityController<MainActivity> c=Robolectric.buildActivity(MainActivity.class).setup()){
-   MainActivity a=c.get();shadowOf((Application)a.getApplication()).denyPermissions(android.Manifest.permission.RECORD_AUDIO);a.getSharedPreferences("appSettings",0).edit().putBoolean("aiMicrophoneAsked",true).commit();callInstanceMethod(a,"aiAssistant");((View)getField(a,"root")).findViewWithTag("ai-mic").performClick();assertNotNull(shadowOf(a).getLastRequestedPermission());a.onRequestPermissionsResult(908,new String[]{android.Manifest.permission.RECORD_AUDIO},new int[]{android.content.pm.PackageManager.PERMISSION_DENIED});AlertDialog dialog=org.robolectric.shadows.ShadowAlertDialog.getLatestAlertDialog();assertNotNull(dialog);dialog.getButton(AlertDialog.BUTTON_POSITIVE).performClick();shadowOf(Looper.getMainLooper()).idle();android.content.Intent intent=shadowOf(a).getNextStartedActivity();assertEquals(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS,intent.getAction());
+   MainActivity a=c.get();callInstanceMethod(a,"aiAssistant");View page=getField(a,"root");EditText input=page.findViewWithTag("ai-message");input.setText("保留草稿");page.findViewWithTag("ai-mic").performClick();a.onActivityResult(904,Activity.RESULT_CANCELED,null);assertEquals("保留草稿",input.getText().toString());assertNull(getField(a,"aiVoicePage"));
   }
  }
- @Test public void aSystemBlockedRequestImmediatelyOffersPermissionRecovery(){
+ @Test public void speechResultDoesNotWriteIntoAnotherChat(){
   try(ActivityController<MainActivity> c=Robolectric.buildActivity(MainActivity.class).setup()){
-   MainActivity a=c.get();shadowOf((Application)a.getApplication()).denyPermissions(android.Manifest.permission.RECORD_AUDIO);callInstanceMethod(a,"aiAssistant");((View)getField(a,"root")).findViewWithTag("ai-mic").performClick();a.onRequestPermissionsResult(908,new String[]{android.Manifest.permission.RECORD_AUDIO},new int[]{android.content.pm.PackageManager.PERMISSION_DENIED});AlertDialog dialog=org.robolectric.shadows.ShadowAlertDialog.getLatestAlertDialog();assertNotNull(dialog);assertEquals("前往设置",dialog.getButton(AlertDialog.BUTTON_POSITIVE).getText().toString());
+   MainActivity a=c.get();callInstanceMethod(a,"aiAssistant");((View)getField(a,"root")).findViewWithTag("ai-mic").performClick();callInstanceMethod(a,"aiNewChat");android.content.Intent data=new android.content.Intent().putStringArrayListExtra(android.speech.RecognizerIntent.EXTRA_RESULTS,new java.util.ArrayList<>(java.util.List.of("旧聊天语音")));a.onActivityResult(904,Activity.RESULT_OK,data);assertEquals("",((EditText)((View)getField(a,"root")).findViewWithTag("ai-message")).getText().toString());
   }
  }
  @Test public void attachmentMenuCoversItsPlusAndKeepsTheCloseTargetInPlace(){
