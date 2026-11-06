@@ -1,7 +1,13 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
- <queries><intent><action android:name="android.provider.Telephony.SMS_DELIVER"/></intent><package android:name="com.android.mms"/><package android:name="com.taobao.taobao"/><package android:name="com.cainiao.wireless"/><package android:name="com.xunmeng.pinduoduo"/><package android:name="cn.courselens.ocr"/><package android:name="cn.courselens.ocr.qa"/></queries>
+ <queries><intent><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.LAUNCHER"/></intent><intent><action android:name="android.speech.RecognitionService"/></intent><intent><action android:name="android.provider.Telephony.SMS_DELIVER"/></intent><package android:name="com.android.mms"/><package android:name="com.taobao.taobao"/><package android:name="com.cainiao.wireless"/><package android:name="com.xunmeng.pinduoduo"/><package android:name="cn.courselens.ocr"/><package android:name="cn.courselens.ocr.qa"/></queries>
  <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES"/>
  <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
+ <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS"/>
+ <uses-permission android:name="com.android.alarm.permission.SET_ALARM"/>
+ <uses-permission android:name="android.permission.READ_CALENDAR"/>
+ <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
+ <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PROJECTION"/>
+ <uses-permission android:name="android.permission.RECORD_AUDIO"/>
  <uses-permission android:name="android.permission.INTERNET"/><application android:enableOnBackInvokedCallback="true" android:label="Morrow" android:icon="@mipmap/ic_launcher" android:roundIcon="@mipmap/ic_launcher" android:theme="@style/AppTheme" android:allowBackup="false" android:fullBackupContent="false" android:dataExtractionRules="@xml/data_extraction_rules" android:usesCleartextTraffic="false" android:networkSecurityConfig="@xml/network_security_config" android:supportsRtl="true">
  <activity android:name=".MainActivity" android:exported="true"><intent-filter><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.LAUNCHER"/></intent-filter></activity>
  <activity android:name=".OcrPluginActivity" android:theme="@style/OcrBridgeTheme" android:exported="false"/>
@@ -12,6 +18,8 @@
   <intent-filter><action android:name="android.intent.action.SEND"/><category android:name="android.intent.category.DEFAULT"/><data android:mimeType="text/plain"/></intent-filter>
   <intent-filter><action android:name="android.intent.action.SEND"/><category android:name="android.intent.category.DEFAULT"/><data android:mimeType="image/*"/></intent-filter>
  </activity>
+ <service android:name=".AiScreenService" android:exported="false" android:foregroundServiceType="mediaProjection"/>
+ <service android:name=".AiNotificationListener" android:label="Morrow AI 通知上下文" android:permission="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE" android:exported="true"><intent-filter><action android:name="android.service.notification.NotificationListenerService"/></intent-filter></service>
  <service android:name=".ParcelNotificationListener" android:label="快递取件码识别" android:permission="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE" android:exported="true">
   <intent-filter><action android:name="android.service.notification.NotificationListenerService"/></intent-filter>
  </service>
