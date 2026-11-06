@@ -9,14 +9,14 @@ import androidx.core.view.*;
 /** One progress drives a surface and its scrim, including direct manipulation and IME offsets. */
 class MotionOverlay extends FrameLayout {
  private View panel,shade;private boolean menu,closing,dragging,bottomOrigin;private float downX,downY,downProgress,imeOffset,imeTranslation,backStart=1;private int imeTop,panelPaddingBottom,safeTop;
- boolean imeAnimating;private VelocityTracker velocity;private ViewTreeObserver.OnPreDrawListener pending;
+ boolean imeAnimating,overlapsAnchor;private VelocityTracker velocity;private ViewTreeObserver.OnPreDrawListener pending;
  private MotionOverlay parentSurface;
  private float menuPivotX=Float.NaN,menuPivotY=Float.NaN;
  private Runnable dismiss=()->{};final Motion.Progress motion=new Motion.Progress(0f,this::renderMotion);
  MotionOverlay(Context context){super(context);setClickable(true);}
  void bindMotion(View panel,View shade,boolean menu,Runnable dismiss){
   this.panel=panel;this.shade=shade;this.menu=menu;this.dismiss=dismiss;panelPaddingBottom=panel.getPaddingBottom();
-  ViewCompat.setOnApplyWindowInsetsListener(this,(v,insets)->{androidx.core.graphics.Insets ime=insets.getInsets(WindowInsetsCompat.Type.ime()),bars=insets.getInsets(WindowInsetsCompat.Type.systemBars());safeTop=bars.top;setPadding(bars.left,0,bars.right,ime.bottom);panel.setPadding(panel.getPaddingLeft(),panel.getPaddingTop(),panel.getPaddingRight(),panelPaddingBottom+(ime.bottom>0?0:bars.bottom));return insets;});
+  ViewCompat.setOnApplyWindowInsetsListener(this,(v,insets)->{androidx.core.graphics.Insets ime=insets.getInsets(WindowInsetsCompat.Type.ime()),bars=insets.getInsets(WindowInsetsCompat.Type.systemBars());safeTop=bars.top;setPadding(bars.left,0,bars.right,ime.bottom);panel.setPadding(panel.getPaddingLeft(),panel.getPaddingTop(),panel.getPaddingRight(),panelPaddingBottom+(overlapsAnchor||ime.bottom>0?0:bars.bottom));return insets;});
   ViewCompat.setWindowInsetsAnimationCallback(this,new WindowInsetsAnimationCompat.Callback(WindowInsetsAnimationCompat.Callback.DISPATCH_MODE_CONTINUE_ON_SUBTREE){
    @Override public void onPrepare(WindowInsetsAnimationCompat a){if((a.getTypeMask()&WindowInsetsCompat.Type.ime())==0)return;imeAnimating=true;imeTop=panel.getTop();}
    @Override public WindowInsetsAnimationCompat.BoundsCompat onStart(WindowInsetsAnimationCompat a,WindowInsetsAnimationCompat.BoundsCompat bounds){if((a.getTypeMask()&WindowInsetsCompat.Type.ime())!=0){imeOffset=imeTop-panel.getTop();imeTranslation=imeOffset;renderMotion(motion.value);}return bounds;}

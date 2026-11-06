@@ -178,7 +178,7 @@ public class MainActivity extends Activity {
  private NavigationOverlay sheetMenu(String title){return new NavigationOverlay(true,title);}
  class NavigationOverlay extends MotionOverlay {
   final boolean corner;final View anchor;View returnFocus;final LinearLayout panel,body;final View shade;final LinearLayout underneath;final Runnable underneathBack;final NavigationOverlay previous;
-  final int accessibility;final boolean underneathDetail;boolean fitContent,overlapsAnchor;boolean open=true;int menuWidth=SecondaryUi.MENU_WIDTH;int preferredMenuTop,menuAnchorHeight=dp(48);
+  final int accessibility;final boolean underneathDetail;boolean fitContent;boolean open=true;int menuWidth=SecondaryUi.MENU_WIDTH;int preferredMenuTop,menuAnchorHeight=dp(48);
   NavigationOverlay(boolean corner,String title){this(corner,title,null);}
   NavigationOverlay(boolean corner,String title,View anchor){
    super(MainActivity.this);pageMotion.cancel();this.corner=corner;this.anchor=anchor;underneath=root;underneathBack=pageBack;underneathDetail=showingDetail;previous=navigationOverlay;accessibility=underneath.getImportantForAccessibility();
