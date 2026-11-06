@@ -25,7 +25,7 @@ final class SideNavigation extends FrameLayout {
  private float progress;
  private boolean open,routing,backRegistered;
  private final Motion.Progress motion=new Motion.Progress(0,this::render);
- private float backStart,dragStart,dragProgress,releaseVelocity;private boolean dragging;private VelocityTracker velocity;
+ private float backStart,dragStart,dragY,dragProgress,releaseVelocity;private boolean dragging,verticalDrag;private VelocityTracker velocity;
 
  SideNavigation(Activity activity,View content,int surface,int card,int ink,IntConsumer navigate,Runnable settings){
   super(activity);this.activity=activity;this.settings=settings;this.content=content;this.surface=surface;this.ink=ink;ui=new SecondaryUi(activity);setTag("side-navigation");setBackgroundColor(card);
@@ -83,8 +83,8 @@ final class SideNavigation extends FrameLayout {
  private void render(float value){progress=value;foreground.setTranslationX(drawerWidth*value);foreground.setClipToOutline(value>0);foreground.invalidateOutline();shade.setAlpha(.18f*value);panel.setAlpha(.65f+.35f*value);panel.setTranslationX(-ui.dp(12)*(1-value));}
  @Override public boolean onInterceptTouchEvent(MotionEvent event){
   if(!isOpen()||routing)return super.onInterceptTouchEvent(event);
-  if(event.getActionMasked()==MotionEvent.ACTION_DOWN){recycleVelocity();velocity=VelocityTracker.obtain();velocity.addMovement(event);dragStart=event.getX();dragProgress=progress;dragging=false;}
-  else if(event.getActionMasked()==MotionEvent.ACTION_MOVE&&Math.abs(event.getX()-dragStart)>ViewConfiguration.get(getContext()).getScaledTouchSlop()){motion.stop();dragging=true;return true;}
+  if(event.getActionMasked()==MotionEvent.ACTION_DOWN){recycleVelocity();velocity=VelocityTracker.obtain();velocity.addMovement(event);dragStart=event.getX();dragY=event.getY();dragProgress=progress;dragging=verticalDrag=false;}
+  else if(event.getActionMasked()==MotionEvent.ACTION_MOVE&&!verticalDrag){float dx=Math.abs(event.getX()-dragStart),dy=Math.abs(event.getY()-dragY);if(Math.max(dx,dy)>ViewConfiguration.get(getContext()).getScaledTouchSlop()){if(dy>=dx)verticalDrag=true;else{motion.stop();dragProgress=progress;dragging=true;return true;}}}
   else if(event.getActionMasked()==MotionEvent.ACTION_UP||event.getActionMasked()==MotionEvent.ACTION_CANCEL)recycleVelocity();return super.onInterceptTouchEvent(event);
  }
  @Override public boolean onTouchEvent(MotionEvent event){
