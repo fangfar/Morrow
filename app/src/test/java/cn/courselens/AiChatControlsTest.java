@@ -50,4 +50,9 @@ public class AiChatControlsTest {
    MainActivity a=c.get();shadowOf((Application)a.getApplication()).denyPermissions(android.Manifest.permission.RECORD_AUDIO);a.getSharedPreferences("appSettings",0).edit().putBoolean("aiMicrophoneAsked",true).commit();callInstanceMethod(a,"aiAssistant");((View)getField(a,"root")).findViewWithTag("ai-mic").performClick();AlertDialog dialog=org.robolectric.shadows.ShadowAlertDialog.getLatestAlertDialog();assertNotNull(dialog);dialog.getButton(AlertDialog.BUTTON_POSITIVE).performClick();shadowOf(Looper.getMainLooper()).idle();android.content.Intent intent=shadowOf(a).getNextStartedActivity();assertEquals(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS,intent.getAction());
   }
  }
+ @Test public void aSystemBlockedRequestImmediatelyOffersPermissionRecovery(){
+  try(ActivityController<MainActivity> c=Robolectric.buildActivity(MainActivity.class).setup()){
+   MainActivity a=c.get();shadowOf((Application)a.getApplication()).denyPermissions(android.Manifest.permission.RECORD_AUDIO);callInstanceMethod(a,"aiAssistant");((View)getField(a,"root")).findViewWithTag("ai-mic").performClick();a.onRequestPermissionsResult(908,new String[]{android.Manifest.permission.RECORD_AUDIO},new int[]{android.content.pm.PackageManager.PERMISSION_DENIED});AlertDialog dialog=org.robolectric.shadows.ShadowAlertDialog.getLatestAlertDialog();assertNotNull(dialog);assertEquals("前往设置",dialog.getButton(AlertDialog.BUTTON_POSITIVE).getText().toString());
+  }
+ }
 }
