@@ -32,13 +32,14 @@ final class SecondaryUi {
  void styleIcon(TextView view,int drawable){view.setTextColor(INK);view.setBackgroundTintList(null);GradientDrawable circle=bg(CARD,24);circle.setStroke(dp(1),SOFT);view.setBackground(circle);view.setClipToOutline(true);android.graphics.drawable.Drawable icon=activity.getDrawable(drawable).mutate();icon.setTintList(new android.content.res.ColorStateList(new int[][]{new int[]{-android.R.attr.state_enabled},new int[]{}},new int[]{DISABLED,INK}));icon.setBounds(0,0,dp(24),dp(24));view.setCompoundDrawables(icon,null,null,null);view.setPadding(dp(12),0,dp(12),0);focusOutline(view);}
  Button iconAction(LinearLayout body,int drawable,String label,Runnable run){Button button=action(body,"",run);button.setContentDescription(label);button.setTooltipText(label);styleIcon(button,drawable);LinearLayout.LayoutParams lp=new LinearLayout.LayoutParams(dp(ICON_SIZE),dp(ICON_SIZE));lp.leftMargin=dp(8);body.updateViewLayout(button,lp);return button;}
  Button menuAction(LinearLayout body,Runnable run){Button button=iconAction(body,R.drawable.ic_menu,"打开导航菜单",run);button.setTag("side-menu-button");LinearLayout.LayoutParams size=(LinearLayout.LayoutParams)button.getLayoutParams();size.leftMargin=0;size.rightMargin=dp(8);return button;}
+ void headerStyle(LinearLayout row){row.setBaselineAligned(false);row.setPadding(dp(16),dp(8),dp(16),dp(6));for(int i=0;i<row.getChildCount();i++){View child=row.getChildAt(i);if(child.getLayoutParams() instanceof LinearLayout.LayoutParams&&child.getLayoutParams().height==dp(48))((LinearLayout.LayoutParams)child.getLayoutParams()).gravity=Gravity.TOP;}}
  void fitHeader(LinearLayout row,View title){
   ViewGroup parent=(ViewGroup)row.getParent();int index=parent.indexOfChild(row);ViewGroup.LayoutParams original=row.getLayoutParams();View spacer=row.getChildAt(1);int spacerWidth=spacer.getLayoutParams().width;final int controlsWidth=dp(112)+spacerWidth*2;parent.removeView(row);
   LinearLayout.LayoutParams inlineTitle=new LinearLayout.LayoutParams(0,-2,1),stackedTitle=new LinearLayout.LayoutParams(-1,-2),inlineSpacer=new LinearLayout.LayoutParams(spacerWidth,1),stackedSpacer=new LinearLayout.LayoutParams(0,1,1);stackedTitle.setMargins(dp(16),dp(8),dp(16),0);
   LinearLayout shell=new LinearLayout(activity){
    @Override protected void onMeasure(int width,int height){
     title.measure(View.MeasureSpec.makeMeasureSpec(0,View.MeasureSpec.UNSPECIFIED),View.MeasureSpec.makeMeasureSpec(0,View.MeasureSpec.UNSPECIFIED));int needed=title.getMeasuredWidth()+controlsWidth+row.getPaddingLeft()+row.getPaddingRight();boolean stacked=View.MeasureSpec.getSize(width)<needed;
-    if(stacked&&title.getParent()==row){row.removeView(title);addView(title,0,stackedTitle);spacer.setLayoutParams(stackedSpacer);}
+    if(stacked&&title.getParent()==row){row.removeView(title);addView(title,stackedTitle);spacer.setLayoutParams(stackedSpacer);}
     else if(!stacked&&title.getParent()==this){removeView(title);row.addView(title,2,inlineTitle);spacer.setLayoutParams(inlineSpacer);}
     super.onMeasure(width,height);
    }

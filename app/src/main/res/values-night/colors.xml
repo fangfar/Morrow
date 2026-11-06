@@ -3,9 +3,9 @@
     <color name="app_card">#202428</color>
     <color name="app_ink">#F1F3F5</color>
     <color name="app_muted">#AFB6BF</color>
-    <color name="app_primary">#2F6FE4</color>
-    <color name="app_accent">#8CB9FF</color>
-    <color name="app_selected">#24344C</color>
+    <color name="app_primary">#EE70AB</color>
+    <color name="app_accent">#EE70AB</color>
+    <color name="app_selected">#482B3B</color>
     <color name="app_soft">#2A2F35</color>
     <color name="app_chip">#262B31</color>
     <color name="app_divider">#333A42</color>
