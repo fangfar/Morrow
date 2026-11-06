@@ -19,6 +19,10 @@ public class DeepSeekPlanTest {
   DeepSeekPlan next=DeepSeekPlan.build(json("{\"type\":\"update_exam\",\"index\":1,\"value\":{\"time\":\"09:30\"}}"),raw,p.exams,ClassTimes.DEFAULT);assertEquals("09:30",new JSONArray(next.exams).getJSONObject(0).getString("time"));
   assertEquals(0,new JSONArray(DeepSeekPlan.build(json("{\"type\":\"delete_exam\",\"index\":1}"),raw,next.exams,ClassTimes.DEFAULT).exams).length());
  }
+ @Test public void examEndTimeIsOptionalAndValidated()throws Exception{
+  DeepSeekPlan plan=DeepSeekPlan.build(json("{type:add_exam,value:{name:Exam,date:'2026-12-20',time:'09:00',end_time:'11:00'}}"),COURSE,"[]",ClassTimes.DEFAULT);assertEquals("11:00",new JSONArray(plan.exams).getJSONObject(0).getString("end_time"));
+  for(String value:new String[]{"{type:add_exam,value:{name:Exam,date:'2026-12-20',end_time:'11:00'}}","{type:add_exam,value:{name:Exam,date:'2026-12-20',time:'12:00',end_time:'11:00'}}"})assertThrows(RuntimeException.class,()->DeepSeekPlan.build(json(value),COURSE,"[]",ClassTimes.DEFAULT));
+ }
  @Test public void rejectsInvalidOrAmbiguousPlans()throws Exception{
   String[] bad={"{\"type\":\"delete_course\",\"index\":0}","{\"type\":\"update_course\",\"index\":1,\"value\":{\"room\":\"A|B\"}}","{\"type\":\"add_course\",\"value\":{\"name\":\"课\",\"day\":1,\"start\":1,\"end\":30,\"weeks\":\"1-16\"}}","{\"type\":\"add_exam\",\"value\":{\"name\":\"考试\",\"date\":\"2026-02-30\"}}","{\"type\":\"delete_all\"}","{\"type\":\"update_course\",\"index\":1,\"value\":{\"unknown\":true}}"};
   for(String value:bad){try{DeepSeekPlan.build(json(value),COURSE,"[]",ClassTimes.DEFAULT);fail(value);}catch(RuntimeException expected){}}
