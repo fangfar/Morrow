@@ -8,6 +8,8 @@ import org.jsoup.nodes.*;
 
 /** System formats referenced from WakeUp 3.612 (Apache-2.0); see assets/licenses/wakeup-parsers.txt. */
 final class WebCourseParser {
+ private static final Pattern WEEK_TIME=Pattern.compile("(?:[单双](?:周)?\\s*[:：]?\\s*)?(?:第)?\\d+(?:[-至]\\d+)?(?:\\([单双](?:周)?\\)|[单双])?(?:\\s*[,、]\\s*(?:第)?\\d+(?:[-至]\\d+)?(?:\\([单双](?:周)?\\)|[单双])?)*\\s*周(?:\\s*(?:\\([单双](?:周)?\\)|[单双](?:周)?))?(?=$|[\\s()\\[\\]{},、;:./-])");
+ private static final Pattern PERIOD_TIME=Pattern.compile("(?:第)?\\d+(?:\\s*[-,、]\\s*\\d+)*\\s*节(?=$|[\\s()\\[\\]{},、;:./-])");
  static final class Result {final String system,courses;Result(String system,String courses){this.system=system;this.courses=courses;}}
  static Result parse(String source)throws Exception {
   if(source==null||source.length()>1000000)throw new IllegalArgumentException("页面过大，请打开个人课表页后再识别。");
@@ -53,14 +55,21 @@ final class WebCourseParser {
      add(out,cell.day,name,room,teacher,parseWeeks(w.group(1)),sections(raw,cell.periods));
     }
    }
-  }else{
-   for(Element table:doc.select("table"))readList(table,out);
-   boolean list=!out.isEmpty();int listed=out.size();for(Element table:doc.select("table"))genericGrid(table,out);readCards(doc,out);
-   if(!out.isEmpty())system=list?(out.size()>listed?"通用周课表 / 课程明细":"课程明细 / URP"):"通用周课表";
-   else {String fallback=SchoolParser.webCourses(source);return new Result(system,fallback);}
-  }
+  }else{return generic(doc);}
   if(out.isEmpty())throw bad(system);return new Result(system,String.join("\n",out));
  }
+ static Result parseGeneric(String source){
+  if(source==null||source.length()>1000000)throw new IllegalArgumentException("页面过大，请打开个人课表页后再识别。");return generic(Jsoup.parse(source));
+ }
+ private static Result generic(Document doc){
+  doc.select("[data-morrow-hidden=true], [hidden], [aria-hidden=true], script,style,template").remove();
+  for(Element element:doc.select("[style]"))if(element.attr("style").toLowerCase(Locale.ROOT).matches("(?s).*(?:display\\s*:\\s*none|visibility\\s*:\\s*(?:hidden|collapse)).*"))element.remove();
+  Set<String> out=new LinkedHashSet<>();for(Element table:doc.select("table"))readList(table,out);
+  boolean list=!out.isEmpty();int listed=out.size();for(Element table:doc.select("table"))genericGrid(table,out);readCards(doc,out);
+  if(!out.isEmpty())return new Result(list?(out.size()>listed?"通用周课表 / 课程明细":"课程明细 / URP"):"通用周课表",String.join("\n",out));
+  return new Result("通用表格",SchoolParser.webCourses(doc.outerHtml()));
+ }
+
  private static Result json(String source)throws Exception {
   Object value=new JSONTokener(source).nextValue();if(!(value instanceof JSONObject))throw bad("JSON");JSONObject root=(JSONObject)value;
   if(root.has("kbList"))return new Result("新正方接口",SchoolParser.xzitCourses(source));
@@ -147,7 +156,7 @@ final class WebCourseParser {
  private static SortedSet<Integer> periodNumbers(String text){SortedSet<Integer> result=new TreeSet<>();if(text.isEmpty())return result;for(int[] range:sections("",text))for(int i=range[0];i<=range[1];i++)result.add(i);return result;}
  private static String numbers(Collection<Integer> values){List<String> out=new ArrayList<>();for(int value:values)out.add(""+value);return String.join(",",out);}
  private static String genericWeeks(String text){
-  Matcher match=Pattern.compile("(?:[单双](?:周)?\\s*[:：]?\\s*)?(?:第)?\\d+(?:[-至]\\d+)?(?:\\s*[,、]\\s*(?:第)?\\d+(?:[-至]\\d+)?)*\\s*周(?:\\s*(?:\\([单双](?:周)?\\)|[单双](?:周)?))?").matcher(normalize(text));Set<Integer> values=new TreeSet<>();
+  Matcher match=WEEK_TIME.matcher(normalize(text));Set<Integer> values=new TreeSet<>();
   while(match.find())for(String week:parseWeeks(match.group()).split(","))values.add(Integer.parseInt(week));
   String remainder=match.replaceAll("").replaceAll("(?:星期|周|礼拜)[一二三四五六日天七1-7]|(?:第)?\\d+(?:\\s*[-,、]\\s*\\d+)*\\s*节", "");
   if(remainder.matches("(?s).*(?:周|待定|未知|\\d).*"))throw bad("通用课表周次");
@@ -189,10 +198,17 @@ final class WebCourseParser {
    for(Element block:courseBlocks(element))genericCourse(block,cellDays.get(element).first(),cellPeriods.get(element),out);
   }
  }
- private static List<Element> courseBlocks(Element cell){
-  List<Element> blocks=new ArrayList<>();for(Element child:cell.children())if(child.tagName().matches("div|article|li")&&child.text().matches("(?s).*\\d+.*周.*"))blocks.add(child);
-  if(blocks.size()==1){List<Element> nested=courseBlocks(blocks.get(0));if(nested.size()>1)return nested;}
-  if(blocks.size()>1){for(Node node:cell.childNodes())if(node instanceof TextNode&&!((TextNode)node).text().trim().isEmpty())throw bad("同格多门课程");return blocks;}
+ private static List<Element> courseBlocks(Element cell){return courseBlocks(cell,0);}
+ private static List<Element> courseBlocks(Element cell,int depth){
+  if(depth>60)throw bad("课程块嵌套过深的课表");
+  List<Element> blocks=new ArrayList<>();long headings=cell.children().stream().filter(e->e.is(".course-name, [data-course-name], h1,h2,h3,h4,h5,h6")).count();
+  if(headings>1){Element current=null;for(Node node:cell.childNodes()){
+   if(node instanceof Element&&((Element)node).is(".course-name, [data-course-name], h1,h2,h3,h4,h5,h6")){current=new Element("div");blocks.add(current);}
+   if(current!=null)current.appendChild(node.clone());else if(!node.toString().trim().isEmpty())throw bad("同格多门课程");
+  }return blocks;}
+  for(Element child:cell.children())if(child.tagName().matches("div|article|li")&&WEEK_TIME.matcher(normalize(child.text())).find())blocks.add(child);
+  if(blocks.size()==1){List<Element> nested=courseBlocks(blocks.get(0),depth+1);if(nested.size()>1)return nested;}
+  if(blocks.size()>1){for(Node node:cell.childNodes())if(node instanceof TextNode&&!((TextNode)node).text().trim().isEmpty())throw bad("同格多门课程");List<Element> nested=new ArrayList<>();for(Element block:blocks)nested.addAll(courseBlocks(block,depth+1));return nested;}
   String[] parts=cell.html().split("(?i)<hr[^>]*>|(?:<br\\s*/?>\\s*){2,}|-{4,}");if(parts.length==1)return Collections.singletonList(cell);
   blocks.clear();for(String part:parts)if(!empty(Jsoup.parseBodyFragment(part).text()))blocks.add(Jsoup.parseBodyFragment(part).body());return blocks;
  }
@@ -208,18 +224,43 @@ final class WebCourseParser {
    unlabelled.add(line);
   }
   String name=labels.getOrDefault("课程名称","");
-  if(name.isEmpty()){Element title=element.selectFirst("[data-course-name], .course-name, h1,h2,h3,h4,h5,h6");if(title!=null)name=title.hasAttr("data-course-name")?title.attr("data-course-name"):title.text();}
+  if(name.isEmpty()){
+   Element title=element.selectFirst("[data-course-name], .course-name, h1,h2,h3,h4,h5,h6");
+   if(title!=null){
+    Element clean=title.clone();clean.select("sup,sub,[role=status]").remove();
+    boolean blockHint=!clean.ownText().trim().isEmpty()&&clean.children().stream().anyMatch(child->child.tagName().matches("div|p"));
+    name=title.hasAttr("data-course-name")?title.attr("data-course-name"):blockHint?clean.ownText():clean.text();
+   }
+  }
   if(name.isEmpty()&&!unlabelled.isEmpty()&&!unlabelled.get(0).matches(".*(?:\\d+.*[周节]|星期[一二三四五六日天七]).*"))name=unlabelled.remove(0);
   if(name.trim().isEmpty())throw bad("通用课程名称");
-  String schedule=labels.getOrDefault("时间","");List<String> details=new ArrayList<>();boolean seenWeeks=false,interveningText=false;
+  String schedule=labels.getOrDefault("时间","");List<String> details=new ArrayList<>();boolean seenWeeks=false,interveningText=false,seenPeriods=PERIOD_TIME.matcher(schedule).find();
   for(String line:unlabelled)if(!line.equals(name)){
-   if(line.matches(".*\\d+.*[周节].*")||headingDay(line)>0){if(line.matches(".*\\d+.*周.*")){if(seenWeeks&&interveningText)throw bad("未能分开的同格多门课程");seenWeeks=true;interveningText=false;}schedule+="\n"+line;}
+   boolean weekly=WEEK_TIME.matcher(line).find(),periods=PERIOD_TIME.matcher(line).find();
+   if(periods&&!weekly&&seenPeriods&&PERIOD_TIME.matcher(line.replaceFirst("^[()\\[\\]\\s]*", "")).lookingAt())throw bad("未能配对周次的重复节次");
+   if(weekly||periods&&!seenPeriods||headingDay(line)>0){if(weekly){if(seenWeeks&&interveningText&&element.selectFirst("[data-course-name], .course-name, h1,h2,h3,h4,h5,h6")==null)throw bad("未能分开的同格多门课程");seenWeeks=true;interveningText=false;}
+    String timing=timingText(line,details);schedule+="\n"+timing;seenPeriods|=PERIOD_TIME.matcher(timing).find();
+   }
    else{details.add(line);if(seenWeeks)interveningText=true;}
   }
   int explicit=labels.containsKey("星期")?weekdayValue(labels.get("星期")):weekDay(schedule);if(weekday==0)weekday=explicit;if(explicit>0&&explicit!=weekday)throw bad("星期与表格位置冲突的课表");if(labels.containsKey("星期")&&explicit==0)throw bad("通用课表星期");
-  String weeks=labels.containsKey("周次")?parseWeeks(labels.get("周次")):genericWeeks(schedule);
-  String units=labels.getOrDefault("节次","");List<int[]> ranges=units.isEmpty()?sections(schedule,numbers(positions)):sections(units+(units.contains("节")?"":"节"),"");
-  if(!positions.isEmpty())for(int[] range:ranges){if(!positions.contains(range[0])||(positions.size()>1&&!positions.contains(range[1])))throw bad("节次与表格位置冲突的课表");}
-  for(int[] range:ranges){Course course=new Course(weekday,range[0],range[1],SchoolParser.clean(name),SchoolParser.clean(labels.getOrDefault("教室","")),weeks,SchoolParser.clean(labels.getOrDefault("教师","")),SchoolParser.clean(String.join("；",details)));Course.parse(course.encode());out.add(course.encode());}
+  List<String> schedules=new ArrayList<>();for(String line:schedule.split("\\n"))if(!line.trim().isEmpty())schedules.add(line);
+  if(schedules.size()<2||schedules.stream().anyMatch(line->!WEEK_TIME.matcher(line).find()||!PERIOD_TIME.matcher(line).find()))schedules=Collections.singletonList(schedule);
+  else if(labels.containsKey("周次")||labels.containsKey("节次"))throw bad("重复的课表时间字段");
+  for(String time:schedules){
+   String weeks=labels.containsKey("周次")?parseWeeks(labels.get("周次")):genericWeeks(time);
+   String units=labels.getOrDefault("节次","");List<int[]> ranges=units.isEmpty()?sections(time,numbers(positions)):sections(units+(units.contains("节")?"":"节"),"");
+   if(!positions.isEmpty())for(int[] range:ranges){if(!positions.contains(range[0])||(positions.size()>1&&!positions.contains(range[1])))throw bad("节次与表格位置冲突的课表");}
+   for(int[] range:ranges){Course course=new Course(weekday,range[0],range[1],SchoolParser.clean(name),SchoolParser.clean(labels.getOrDefault("教室","")),weeks,SchoolParser.clean(labels.getOrDefault("教师","")),SchoolParser.clean(String.join("；",details)));Course.parse(course.encode());out.add(course.encode());}
+  }
+ }
+ private static String timingText(String line,List<String> details){
+  Matcher clocks=Pattern.compile("(?<!\\d)(?:[01]?\\d|2[0-3]):[0-5]\\d\\s*-\\s*(?:[01]?\\d|2[0-3]):[0-5]\\d(?!\\d)").matcher(line);
+  while(clocks.find())details.add("上课时刻："+clocks.group());String text=clocks.replaceAll("");
+  Matcher tokens=Pattern.compile(WEEK_TIME.pattern()+"|"+PERIOD_TIME.pattern()).matcher(text);
+  int start=-1,end=-1;while(tokens.find()){if(start<0)start=tokens.start();end=tokens.end();}if(start<0)return text;
+  String prefix=text.substring(0,start).replaceAll("[()\\[\\]{}\\s]", ""),weekday="";Matcher day=Pattern.compile("(?:星期|周|礼拜)[一二三四五六日天七1-7]").matcher(prefix);if(day.find()){weekday=day.group();prefix=day.replaceAll("");}String suffix=text.substring(end).replaceFirst("^[)\\] }\\s]*", "").trim();
+  if(!prefix.isEmpty()||WEEK_TIME.matcher(suffix).find()||PERIOD_TIME.matcher(suffix).find()||suffix.matches("(?s).*(?:待定|未知).*" )||suffix.matches("^[,、]\\s*\\d.*"))throw bad("未能分开的课表时间与说明");
+  if(!suffix.isEmpty())details.add(suffix);return weekday+" "+text.substring(start,end);
  }
 }

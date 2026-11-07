@@ -4,7 +4,7 @@ const vm = require('node:vm');
 const script = fs.readFileSync('app/src/main/assets/web-timetable-extract.js', 'utf8').replace('__MORROW_REQUEST_ID__', '7');
 function doc(url, text = '', html = '<html>合成课表</html>', fields = {}, frames = []) {
   const copy = { outerHTML: html, querySelectorAll: () => [] };
-  return { URL: url, body: { innerText: text }, documentElement: { cloneNode: () => copy }, querySelector: key => fields[key], querySelectorAll: key => key === 'iframe,frame' ? frames : [] };
+  return { defaultView: { getComputedStyle: () => ({ display: 'block', visibility: 'visible' }) }, URL: url, body: { innerText: text }, documentElement: { cloneNode: () => copy, querySelectorAll: () => [] }, querySelector: key => fields[key], querySelectorAll: key => key === 'iframe,frame' ? frames : [] };
 }
 async function read(document, response = '{}', fail = false) {
   const calls = [], window = {};
@@ -25,6 +25,13 @@ async function read(document, response = '{}', fail = false) {
 (async () => {
   const plain = await read(doc('https://school.example/table'));
   assert.equal(plain.pages.length, 1); assert.equal(plain.calls.length, 0);
+  const hiddenDoc = doc('https://school.example/table');
+  const marked = [];
+  hiddenDoc.documentElement.querySelectorAll = () => [{ display: 'none' }, { visibility: 'hidden' }, { display: 'block', visibility: 'visible' }];
+  hiddenDoc.defaultView.getComputedStyle = element => element;
+  hiddenDoc.documentElement.cloneNode = () => ({ outerHTML: '<html>snapshot</html>', querySelectorAll: selector => selector === '*' ? [0, 1, 2].map(i => ({ setAttribute: (key, value) => marked.push([i, key, value]) })) : [] });
+  await read(hiddenDoc);
+  assert.deepEqual(marked, [[0, 'data-morrow-hidden', 'true'], [1, 'data-morrow-hidden', 'true']]);
   const data = '{"kbList":[{"kcmc":"合成数学"}]}';
   const zf = await read(doc('http://school.example:8080/jwglxt/kbcx/xskbcx_cxXskbcxIndex.html', '', '<html>课表</html>', { '#xnm': { value: '2026' }, '#xqm': { value: '3' } }), data);
   assert.equal(zf.pages[0].html, data); assert.equal(zf.calls.length, 1);

@@ -6,7 +6,7 @@ import static org.junit.Assert.*;
 
 public class GenericWebCourseTest {
  private String grid(String rows){return "<table><tr><th>时段</th><th>节次</th><th>周一<br>11/9</th><th>周二<br>11/10</th></tr>"+rows+"</table>";}
- private List<Course> parse(String html)throws Exception{return Course.parse(WebCourseParser.parse(html).courses);}
+ private List<Course> parse(String html)throws Exception{return Course.parse(WebCourseParser.parseGeneric(html).courses);}
  private String block(String name,String weeks){return "<div><h4>"+name+"</h4><p>周次："+weeks+"</p><p>授课教师：合成教师</p><p>上课地点：A101</p></div>";}
  private void invalid(String html)throws Exception{try{parse(html);fail("Ambiguous data must not be imported");}catch(IllegalArgumentException expected){}}
  @Test public void anonymousGridUsesRowspanAndPositionWithoutSchoolIds()throws Exception {
@@ -68,9 +68,29 @@ public class GenericWebCourseTest {
  }
  @Test public void incompleteUnlabelledWeekSuffixIsNotSilentlyIgnored()throws Exception {
   invalid(grid("<tr><th>上午</th><th>1-2</th><td>合成课程<br>第1-8周，待定</td><td></td></tr>"));
+  invalid(grid("<tr><th>上午</th><th>1-2</th><td><h4>合成课程</h4><div>(1-8周) (1-2节)</div><p>(3-4节)</p></td><td></td></tr>"));
  }
  @Test public void schoolLikeIdsDoNotOverrideSemanticStructure()throws Exception {
   String html=grid("<tr><th>上午</th><th>1-2</th><td>"+block("普通学校课程","1-8周")+"</td><td></td></tr>");
   for(String id:new String[]{"Table1","table1","kbtable"})assertEquals("普通学校课程",parse(html.replace("<table>","<table id='"+id+"'>")).get(0).name);
+ }
+ @Test public void adjacentSemanticNamesSplitCoursesAndKeepTimingSeparateFromNumbers()throws Exception {
+  String content="<div class='course-name'><div role='status'>已调整</div>合成数学<sup>注1</sup></div><div>1234567.001</div><div>(1~4(双),6~8周) (1-2节 08:00-09:30) A204 合成班 周老师</div><div>合成班周四5-6节实验</div>"
+   +"<div class='course-name'>合成英语</div><div>7654321.002</div><div>(9~12单周) (1-2节 08:00-09:30) B316</div>";
+  for(String wrapper:new String[]{"<div>","<article>"}){
+   List<Course> courses=parse(grid("<tr><th>上午</th><th>1-2</th><td>"+wrapper+content+wrapper.replace("<","</")+"</td><td></td></tr>"));
+   assertEquals(2,courses.size());Course c=courses.get(0);assertEquals("合成数学",c.name);assertEquals("2,4,6,7,8",c.weeks);assertEquals(1,c.start);assertEquals(2,c.end);assertTrue(c.details.contains("A204"));assertTrue(c.details.contains("周老师"));assertTrue(c.details.contains("周四5-6节实验"));assertEquals("9,11",courses.get(1).weeks);
+  }
+ }
+ @Test public void oneCourseCanHaveMultipleWeekAndPeriodPairsInFreeTextNodes()throws Exception {
+  String content="<div class='course-name'>合成<span>实验</span></div><div>(1~2周) (1-2节 08:00-09:30) A101</div><br>(4周) (2节 09:00-09:45) B203<br>(6~8双周) (1-2节 08:00-09:30) C305";
+  List<Course> courses=parse(grid("<tr><th>上午</th><th>1-2</th><td>"+content+"</td><td></td></tr>"));assertEquals(3,courses.size());assertEquals("合成实验",courses.get(0).name);assertEquals("1,2",courses.get(0).weeks);assertEquals("4",courses.get(1).weeks);assertEquals(2,courses.get(1).start);assertEquals("6,8",courses.get(2).weeks);
+ }
+ @Test public void hiddenCopiesAndOldScheduleHintsDoNotBecomeCourses()throws Exception {
+  String valid="<div class='course-name'>合成数学</div><div>(1-8周) (1-2节) A101<span data-morrow-hidden='true'>原安排：(9周) (5-6节)</span></div>";
+  String hidden="<div class='course-name'>隐藏课程</div><p>(20周) (9-10节)</p>";
+  String html=grid("<tr><th>上午</th><th>1-2</th><td><div>"+valid+"</div><div>"+valid+"</div><div data-morrow-hidden='true'>"+hidden+"</div><div style='display: none'>"+hidden+"</div><div aria-hidden='true'>"+hidden+"</div></td><td></td></tr>");
+  assertEquals(1,parse(html).size());assertEquals("1,2,3,4,5,6,7,8",parse(html).get(0).weeks);
+  assertTrue(parse("<section hidden>"+html+"</section>").isEmpty());
  }
 }

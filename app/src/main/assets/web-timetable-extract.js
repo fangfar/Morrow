@@ -40,6 +40,11 @@
       try { JSON.parse(raw); add(url.href, raw, true); return; } catch (ignored) {}
     }
     const copy = doc.documentElement.cloneNode(true);
+    const originals = doc.documentElement.querySelectorAll('*'), clones = copy.querySelectorAll('*');
+    originals.forEach((element, index) => {
+      const style = doc.defaultView.getComputedStyle(element);
+      if (style.display === 'none' || style.visibility === 'hidden' || style.visibility === 'collapse') clones[index].setAttribute('data-morrow-hidden', 'true');
+    });
     const selects = doc.querySelectorAll('select'), copied = copy.querySelectorAll('select');
     selects.forEach((select, index) => {
       Array.from(copied[index].options).forEach((option, i) => {
