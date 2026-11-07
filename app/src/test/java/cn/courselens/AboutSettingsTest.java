@@ -1,6 +1,7 @@
 package cn.courselens;
 
 import android.content.Intent;
+import android.content.ClipboardManager;
 import android.view.View;
 import android.widget.Switch;
 import org.junit.Test;
@@ -22,6 +23,8 @@ public class AboutSettingsTest {
    assertNull(about.findViewWithTag("disk-download"));assertNull(about.findViewWithTag("check-app-update"));
    assertNull(about.findViewWithTag("auto-check-updates"));assertNull(about.findViewWithTag("update-status"));
    assertNotNull(about.findViewWithTag("public-repository"));
+   View feedback=about.findViewWithTag("feedback-qq-group");assertEquals("QQ 群反馈，1135218563",feedback.getContentDescription());feedback.performClick();Intent group=shadowOf(activity).getNextStartedActivity();assertEquals(Intent.ACTION_VIEW,group.getAction());assertEquals("https",group.getData().getScheme());assertEquals("qun.qq.com",group.getData().getHost());assertEquals("/universal-share/share",group.getData().getPath());assertEquals("qF9e8dvcJ7nEJObP6TFs8LMcYxpXsUTi+p5w7p4i4Uz9t5KKpSFJiojPkJruxuXK",group.getData().getQueryParameter("authKey"));assertTrue(feedback.performLongClick());
+   ClipboardManager clipboard=activity.getSystemService(ClipboardManager.class);assertEquals("1135218563",clipboard.getPrimaryClip().getItemAt(0).getText().toString());assertSame(about,getField(activity,"root"));
    about.findViewWithTag("official-website").performClick();Intent website=shadowOf(activity).getNextStartedActivity();
    assertEquals(Intent.ACTION_VIEW,website.getAction());assertEquals("https://morrow.xvyan.cn/",website.getDataString());
    about.findViewWithTag("update-settings").performClick();View updates=getField(activity,"root");
