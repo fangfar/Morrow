@@ -57,9 +57,35 @@ public final class WebTimetableActivity extends Activity {
 
  private void preview(String courses,List<Course> parsed,String initialTimes){
   LinearLayout body=new LinearLayout(this);body.setOrientation(LinearLayout.VERTICAL);body.setPadding(ui.dp(20),ui.dp(12),ui.dp(20),0);
-  StringBuilder summary=new StringBuilder("识别到 "+parsed.size()+" 个时段，请核对星期、节次和周次。\n");for(Course c:parsed)summary.append(c.name).append(" · 星期").append(c.day).append(" · ").append(c.start).append('-').append(c.end).append("节 · ").append(c.weeks).append("周").append(c.room.isEmpty()?"":" · "+c.room).append(c.teacher.isEmpty()?"":" · "+c.teacher).append(c.details.isEmpty()?"":"\n原文补充："+c.details).append('\n');body.addView(ui.text(summary.toString(),14,ui.INK));
-  body.addView(ui.text("作息时间（每行 HH:mm-HH:mm，请按学校实际时间修改）",14,ui.MUTED));EditText times=new EditText(this);times.setContentDescription("学校作息时间");times.setInputType(android.text.InputType.TYPE_CLASS_TEXT|android.text.InputType.TYPE_TEXT_FLAG_MULTI_LINE);times.setText(initialTimes);body.addView(times);TextView error=ui.text("",14,ui.DANGER);body.addView(error);ScrollView scroll=new ScrollView(this);scroll.addView(body);
-  AlertDialog dialog=new AlertDialog.Builder(this,R.style.SecondaryDialog).setTitle("预览课表").setView(scroll).setNegativeButton("继续浏览",null).setPositiveButton("确认导入",null).create();dialog.show();ui.styleDialog(dialog,false);dialog.getButton(-1).setOnClickListener(v->{try{ClassTimes classTimes=ClassTimes.parse(times.getText().toString());classTimes.validate(parsed);setResult(RESULT_OK,new Intent().putExtra("courses",courses).putExtra("times",classTimes.encode()).putExtra("url",origin(web.getUrl())).putExtra("timetable",getIntent().getStringExtra("timetable")).putExtra("baseline",getIntent().getStringExtra("baseline")));dialog.dismiss();finish();}catch(Exception e){error.setText(e.getMessage());}});
+  Set<String> names=new HashSet<>();for(Course course:parsed)names.add(course.name);
+  TextView summary=ui.text(names.size()+" 门课程 · "+parsed.size()+" 条安排",16,ui.INK);summary.setTypeface(null,android.graphics.Typeface.BOLD);body.addView(summary);
+  TextView hint=ui.text("核对课程、周次与学校作息后导入。",13,ui.MUTED);hint.setPadding(0,ui.dp(8),0,ui.dp(8));body.addView(hint);
+  LinearLayout timeFields=new LinearLayout(this);timeFields.setOrientation(LinearLayout.VERTICAL);timeFields.setVisibility(android.view.View.GONE);
+  TextView timeToggle=ui.popupItem(body,"作息时间 · 展开核对",()->{});timeToggle.setTag("preview-times-toggle");
+  timeFields.addView(ui.text("每行 HH:mm-HH:mm，按学校实际作息修改",13,ui.MUTED));
+  EditText times=new EditText(this);times.setTag("preview-times");times.setContentDescription("学校作息时间");times.setInputType(android.text.InputType.TYPE_CLASS_TEXT|android.text.InputType.TYPE_TEXT_FLAG_MULTI_LINE);times.setText(initialTimes);timeFields.addView(times);body.addView(timeFields);
+  timeToggle.setOnClickListener(v->{boolean expand=timeFields.getVisibility()!=android.view.View.VISIBLE;timeFields.setVisibility(expand?android.view.View.VISIBLE:android.view.View.GONE);timeToggle.setText(expand?"作息时间 · 收起":"作息时间 · 展开核对");});
+  TextView error=ui.text("",14,ui.DANGER);error.setTag("preview-error");error.setVisibility(android.view.View.GONE);error.setAccessibilityLiveRegion(android.view.View.ACCESSIBILITY_LIVE_REGION_POLITE);body.addView(error);
+  List<Course> ordered=new ArrayList<>(parsed);ordered.sort(Comparator.comparingInt((Course c)->c.day).thenComparingInt(c->c.start).thenComparing(c->c.name));
+  int day=0;for(Course c:ordered){
+   if(c.day!=day){day=c.day;TextView heading=ui.text("星期"+"一二三四五六日".charAt(day-1),18,ui.INK);heading.setTypeface(null,android.graphics.Typeface.BOLD);heading.setPadding(0,ui.dp(24),0,ui.dp(8));androidx.core.view.ViewCompat.setAccessibilityHeading(heading,true);body.addView(heading);}
+   LinearLayout item=new LinearLayout(this);item.setTag("preview-course");item.setOrientation(LinearLayout.VERTICAL);item.setPadding(0,ui.dp(12),0,ui.dp(12));body.addView(item);
+   TextView title=ui.text(c.name,16,ui.INK);title.setTypeface(null,android.graphics.Typeface.BOLD);item.addView(title);
+   TextView slot=ui.text((c.start==c.end?"第 "+c.start:"第 "+c.start+"–"+c.end)+" 节 · "+CourseDisplay.prettyWeeks(c),14,ui.PRIMARY);slot.setPadding(0,ui.dp(6),0,ui.dp(6));item.addView(slot);
+   if(!c.room.isEmpty())item.addView(ui.text("教室 · "+c.room,14,ui.MUTED));
+   if(!c.teacher.isEmpty())item.addView(ui.text("教师 · "+c.teacher,14,ui.MUTED));
+   if(!c.className.isEmpty())item.addView(ui.text("教学班 · "+c.className,14,ui.MUTED));
+   if(!c.details.isEmpty()){
+    TextView details=ui.text(c.details,13,ui.MUTED);details.setTextIsSelectable(true);details.setLineSpacing(ui.dp(4),1);details.setVisibility(android.view.View.GONE);
+    TextView toggle=ui.popupItem(item,"查看原文补充",()->{});toggle.setOnClickListener(v->{boolean expand=details.getVisibility()!=android.view.View.VISIBLE;details.setVisibility(expand?android.view.View.VISIBLE:android.view.View.GONE);toggle.setText(expand?"收起原文补充":"查看原文补充");});item.addView(details);
+   }
+   android.view.View divider=new android.view.View(this);divider.setBackgroundColor(ui.DIVIDER);body.addView(divider,new LinearLayout.LayoutParams(-1,ui.dp(1)));
+  }
+  ScrollView scroll=new ScrollView(this);scroll.setTag("preview-scroll");scroll.addView(body);
+  AlertDialog dialog=new AlertDialog.Builder(this,R.style.SecondaryDialog).setTitle("预览课表").setView(scroll).setNegativeButton("继续浏览",null).setPositiveButton("确认导入",null).create();dialog.show();ui.styleDialog(dialog,false);
+  dialog.getWindow().setLayout(Math.min(getResources().getDisplayMetrics().widthPixels-ui.dp(24),ui.dp(600)),(int)(getResources().getDisplayMetrics().heightPixels*.85f));
+  dialog.getWindow().setSoftInputMode(android.view.WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE);
+  dialog.getButton(-1).setOnClickListener(v->{try{ClassTimes classTimes=ClassTimes.parse(times.getText().toString());classTimes.validate(parsed);setResult(RESULT_OK,new Intent().putExtra("courses",courses).putExtra("times",classTimes.encode()).putExtra("url",origin(web.getUrl())).putExtra("timetable",getIntent().getStringExtra("timetable")).putExtra("baseline",getIntent().getStringExtra("baseline")));dialog.dismiss();finish();}catch(Exception e){timeFields.setVisibility(android.view.View.VISIBLE);timeToggle.setText("作息时间 · 收起");error.setText(e.getMessage());error.setVisibility(android.view.View.VISIBLE);scroll.post(()->scroll.smoothScrollTo(0,0));times.requestFocus();}});
  }
  @Override public void onBackPressed(){if(web!=null&&web.canGoBack())web.goBack();else super.onBackPressed();}
  @Override protected void onPause(){CookieManager.getInstance().flush();super.onPause();}

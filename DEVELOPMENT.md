@@ -115,7 +115,9 @@ adb -s SERIAL shell am instrument -w -e parcelOnly true cn.courselens.qa.test/cn
 
 - 通用解析按完整的周次 / 节次片段切分时间，将时刻、课程代码和未标注身份的地点 / 班级文字保留为补充；支持连续课程名节点以及同一课程的多条周次—节次配对，不把不同安排交叉合并。采集时标记计算样式隐藏的内容，通用解析排除隐藏副本和提示模板，系统专用解析器仍保留其所需元数据。`parseGeneric` 提供独立验证入口，回归不经过学校 / 系统专用解析。2026-11-07 对手机 QA 当前宿迁学院课表 DOM 的只读离线核对：73 条安排，展开 237 条课程 / 星期 / 节次 / 周次记录，与独立 DOM 校验结果一致；未验证学校接口结果、教师 / 教室自动字段归属或保存后的完整交互。私人页面和校验产物保存在仓库外。
 
-- 网页导入回归：`WebCourseParserTest`、`GenericWebCourseTest`、`SchoolWebSessionTest`、`WebTimetableTest`、`WebTimetableLayoutTest`；采集脚本运行 `node tests/WebTimetableExtractTest.cjs`。格式参考 WakeUp 3.612 开源解析器，Apache-2.0 许可及来源保存在 `assets/licenses/wakeup-parsers.txt`。合成用例通过不等于所有学校实测通过。
+- 网页导入预览按星期、节次排序，显示独立课程数与安排条数，复用课程详情的连续周次格式；课程名、节次 / 周次、教师 / 教室 / 教学班分行展示，原文补充可展开查看。作息编辑默认折叠，校验失败自动展开并显示错误；确认 / 继续浏览固定在弹窗底部。预览排序不改变实际导入顺序和课程字段。
+
+- 网页导入回归：`WebTimetablePreviewTest`、`WebCourseParserTest`、`GenericWebCourseTest`、`SchoolWebSessionTest`、`WebTimetableTest`、`WebTimetableLayoutTest`；采集脚本运行 `node tests/WebTimetableExtractTest.cjs`。格式参考 WakeUp 3.612 开源解析器，Apache-2.0 许可及来源保存在 `assets/licenses/wakeup-parsers.txt`。合成用例通过不等于所有学校实测通过。
 
 ## 设备验证
 
