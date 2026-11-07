@@ -25,7 +25,15 @@ public class UiConsistencyTest {
    try(ActivityController<MainActivity> controller=Robolectric.buildActivity(MainActivity.class).setup()){
     MainActivity a=controller.get();callInstanceMethod(a,"tasks");idleTasks(a);callInstanceMethod(a,"openSideMenu");settle();snapshot(a,variant+"-drawer.png");
     root(a).findViewWithTag("drawer-settings").performClick();settle();snapshot(a,variant+"-settings.png");
-    View settings=getField(a,"root");View data=settings.findViewWithTag("data-management"),permissions=settings.findViewWithTag("permission-settings"),about=settings.findViewWithTag("about-app");assertSame(data.getParent(),permissions.getParent());assertSame(data.getParent(),about.getParent());assertNotNull(settings.findViewWithTag("settings-term"));assertNotNull(settings.findViewWithTag("school-account"));assertNotNull(settings.findViewWithTag("add-home-widget"));
+    View settings=getField(a,"root");
+    String[] categories={"课表","AI 助手","外观与桌面","隐私与数据","关于"};
+    String[][] entries={{"timetable-management","settings-term","settings-times","school-account"},{"settings-api","settings-ai-memory","settings-ai-info"},{"dark-mode-setting","add-home-widget"},{"permission-settings","data-management"},{"about-app"}};
+    ViewGroup settingsBody=(ViewGroup)settings.findViewWithTag(entries[0][0]).getParent().getParent();int previous=-1;
+    for(int i=0;i<entries.length;i++){
+     ViewGroup group=(ViewGroup)settings.findViewWithTag(entries[i][0]).getParent();int position=settingsBody.indexOfChild(group);assertTrue(position>previous);previous=position;
+     TextView label=(TextView)settingsBody.getChildAt(position-1);assertEquals(categories[i],label.getText().toString());assertTrue(label.isAccessibilityHeading());assertEquals(entries[i].length*2-1,group.getChildCount());
+     for(int j=0;j<entries[i].length;j++){ViewGroup row=(ViewGroup)settings.findViewWithTag(entries[i][j]);assertSame(row,group.getChildAt(j*2));ViewGroup copy=(ViewGroup)row.getChildAt(1);assertEquals("First-level settings have no subtitle",1,copy.getChildCount());assertEquals(((TextView)copy.getChildAt(0)).getText(),row.getContentDescription());}
+    }
     for(String tag:new String[]{"timetable-management","dark-mode-setting","data-management","permission-settings","about-app"}){
      ((View)getField(a,"root")).findViewWithTag(tag).performClick();settle();snapshot(a,variant+"-"+tag+".png");
      if(tag.equals("timetable-management")){View page=getField(a,"root");for(String action:new String[]{"manage-courses","timetable-","add-timetable"})assertNotNull(page.findViewWithTag(action));page.findViewWithTag("add-timetable").performClick();settle();a.onBackPressed();settle();assertEquals("课表管理",((View)getField(a,"root")).getTag());}
