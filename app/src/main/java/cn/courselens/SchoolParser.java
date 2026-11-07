@@ -8,6 +8,29 @@ import java.util.*;
 import java.util.regex.*;
 
 public final class SchoolParser {
+ public static String webCourses(String html){
+  if(html==null||html.length()>1000000)throw new IllegalArgumentException("页面过大");
+  String matrix=htmlCourses(html);if(!matrix.isEmpty())return matrix;
+  Set<String> result=new LinkedHashSet<>();
+  for(Element table:Jsoup.parse(html).select("table")){
+   Map<String,Integer> columns=new HashMap<>();
+   for(Element row:table.select("tr")){
+    Elements cells=row.children();if(cells.isEmpty())continue;
+    if(row.text().contains("课程名称")&&row.text().contains("周次")){
+     columns.clear();for(int i=0;i<cells.size();i++)columns.put(cells.get(i).text().trim(),i);continue;
+    }
+    if(!columns.keySet().containsAll(Arrays.asList("课程名称","星期","节次","周次")))continue;
+    String name=webCell(cells,columns,"课程名称"),day=webCell(cells,columns,"星期").replaceFirst("^(星期|周)","");
+    int weekday="一二三四五六日天".indexOf(day);weekday=day.matches("[1-7]")?Integer.parseInt(day):day.length()==1&&weekday>=0?Math.min(weekday+1,7):0;
+    Matcher units=Pattern.compile("第?\\s*(\\d+)\\s*(?:[-~～—–]\\s*(\\d+))?\\s*节?").matcher(webCell(cells,columns,"节次"));
+    if(weekday==0||!units.matches()||name.isEmpty())throw new IllegalArgumentException("课程星期或节次未识别");
+    String weeks=weeks(webCell(cells,columns,"周次").replaceAll("第|周|[()（）]", ""));
+    Course course=new Course(weekday,Integer.parseInt(units.group(1)),Integer.parseInt(units.group(2)==null?units.group(1):units.group(2)),clean(name),clean(webCell(cells,columns,"教室")),weeks,clean(webCell(cells,columns,"教师")),"","");Course.parse(course.encode());result.add(course.encode());
+   }
+  }
+  return String.join("\n",result);
+ }
+ private static String webCell(Elements cells,Map<String,Integer> columns,String key){Integer column=columns.get(key);return column==null||column>=cells.size()?"":cells.get(column).text().trim();}
  public static String xzitCourses(String json)throws Exception {
   JSONObject root=new JSONObject(json);JSONArray courses=root.getJSONArray("kbList");Set<String> rows=new LinkedHashSet<>();
   for(int i=0;i<courses.length();i++){
