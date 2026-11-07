@@ -20,6 +20,14 @@ final class AiProviders {
   else{JSONArray rows=new JSONArray();if(legacy.configured())rows.put(defaultConfig(legacy.load()).json());state=new JSONObject().put("selected","deepseek").put("providers",rows);}
  }
  static Config defaultConfig(String key){return new Config("deepseek","DeepSeek","https://api.deepseek.com","deepseek-flash",key,true,true);}
+ static List<Config> presets(){return Arrays.asList(
+  new Config("preset-deepseek","DeepSeek","https://api.deepseek.com","deepseek-flash","",true,true),
+  new Config("preset-qwen","通义千问 · 阿里云百炼","https://dashscope.aliyuncs.com/compatible-mode/v1","qwen-plus","",false,false),
+  new Config("preset-glm","智谱 GLM","https://open.bigmodel.cn/api/paas/v4","glm-4.7-flash","",false,false),
+  new Config("preset-kimi","Kimi · 月之暗面","https://api.moonshot.cn/v1","kimi-k2.5","",false,false),
+  new Config("preset-doubao","豆包 · 火山方舟","https://ark.cn-beijing.volces.com/api/v3","","",false,false),
+  new Config("preset-siliconflow","硅基流动","https://api.siliconflow.cn/v1","deepseek-ai/DeepSeek-V4-Flash","",false,false));}
+ static Config custom(){return new Config("custom","","","","",false,false);}
  List<Config> all()throws Exception{List<Config> rows=new ArrayList<>();JSONArray values=state.getJSONArray("providers");for(int i=0;i<values.length();i++)rows.add(Config.read(values.getJSONObject(i)));return rows;}
  Config active()throws Exception{for(Config config:all())if(config.id.equals(state.optString("selected")))return config;return null;}
  void select(String id)throws Exception{Config config=find(id);if(config==null)throw new IllegalArgumentException("配置已不存在。");JSONObject next=new JSONObject(state.toString()).put("selected",id);persist(next);}

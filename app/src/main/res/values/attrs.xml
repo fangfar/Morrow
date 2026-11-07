@@ -1,0 +1,5 @@
+<resources>
+    <attr name="appAccent" format="color"/>
+    <attr name="appOnAccent" format="color"/>
+    <attr name="appSelection" format="color"/>
+</resources>

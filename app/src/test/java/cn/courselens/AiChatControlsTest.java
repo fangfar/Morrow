@@ -28,7 +28,7 @@ public class AiChatControlsTest {
  }
  @Test public void settingsExposeConfigurationAndVoiceStatusWithoutOpeningChat(){
   try(ActivityController<MainActivity> c=Robolectric.buildActivity(MainActivity.class).setup()){
-   MainActivity a=c.get();callInstanceMethod(a,"menu");View settings=getField(a,"root");assertNull(settings.findViewWithTag("ai-assistant"));assertNotNull(settings.findViewWithTag("settings-ai-info"));settings.findViewWithTag("settings-api").performClick();assertEquals("API 配置",((View)getField(a,"root")).getTag());callInstanceMethod(a,"backPage");assertSame(settings,getField(a,"root"));settings.findViewWithTag("settings-ai-voice").performClick();assertNull(((View)getField(a,"root")).findViewWithTag("voice-permission"));assertNotNull(((View)getField(a,"root")).findViewWithTag("voice-service"));
+   MainActivity a=c.get();callInstanceMethod(a,"menu");View settings=getField(a,"root");assertNull(settings.findViewWithTag("ai-assistant"));assertNotNull(settings.findViewWithTag("settings-ai-info"));settings.findViewWithTag("settings-api").performClick();assertEquals("API 配置",((View)getField(a,"root")).getTag());callInstanceMethod(a,"backPage");assertSame(settings,getField(a,"root"));assertNull(settings.findViewWithTag("settings-ai-voice"));callInstanceMethod(a,"aiAssistant");assertNull(((View)getField(a,"root")).findViewWithTag("ai-mic"));
   }
  }
  @Test public void cameraAsksPermissionBeforeOpeningTheInAppPreview(){
@@ -54,11 +54,6 @@ public class AiChatControlsTest {
    chat.findViewWithTag("ai-history-button").performClick();SideNavigation drawer=getField(a,"sideNavigation");drawer.findViewWithTag("drawer-settings").performClick();shadowOf(Looper.getMainLooper()).idleFor(Duration.ofMillis(500));((Runnable)getField(a,"pageBack")).run();assertSame(chat,getField(a,"root"));assertEquals("保留草稿",input.getText().toString());assertEquals(2,input.getSelectionStart());assertEquals(3,(int)callInstanceMethod(a,"primaryTab"));
   }
  }
- @Test public void microphoneDelegatesToSystemWithoutRequestingAppPermissions(){
-  try(ActivityController<MainActivity> c=Robolectric.buildActivity(MainActivity.class).setup()){
-   MainActivity a=c.get();callInstanceMethod(a,"aiAssistant");((View)getField(a,"root")).findViewWithTag("ai-mic").performClick();org.robolectric.shadows.ShadowActivity.IntentForResult request=shadowOf(a).getNextStartedActivityForResult();assertEquals(904,request.requestCode);assertEquals(android.speech.RecognizerIntent.ACTION_RECOGNIZE_SPEECH,request.intent.getAction());assertEquals(android.speech.RecognizerIntent.LANGUAGE_MODEL_FREE_FORM,request.intent.getStringExtra(android.speech.RecognizerIntent.EXTRA_LANGUAGE_MODEL));assertNull(shadowOf(a).getLastRequestedPermission());
-  }
- }
  @Test public void editableKeyAndPairedActionsStaySideBySideInEveryAppearance()throws Exception{
   for(String variant:new String[]{"light","dark","large"}){
    RuntimeEnvironment.setQualifiers(variant.equals("large")?"w320dp-h850dp-notnight":"w400dp-h850dp-"+(variant.equals("dark")?"night":"notnight"));RuntimeEnvironment.setFontScale(variant.equals("large")?1.6f:1f);
@@ -68,21 +63,11 @@ public class AiChatControlsTest {
    }
   }
  }
- @Test public void speechActivityCancellationKeepsTheDraft(){
-  try(ActivityController<MainActivity> c=Robolectric.buildActivity(MainActivity.class).setup()){
-   MainActivity a=c.get();callInstanceMethod(a,"aiAssistant");View page=getField(a,"root");EditText input=page.findViewWithTag("ai-message");input.setText("保留草稿");page.findViewWithTag("ai-mic").performClick();a.onActivityResult(904,Activity.RESULT_CANCELED,null);assertEquals("保留草稿",input.getText().toString());assertNull(getField(a,"aiVoicePage"));
-  }
- }
- @Test public void speechResultDoesNotWriteIntoAnotherChat(){
-  try(ActivityController<MainActivity> c=Robolectric.buildActivity(MainActivity.class).setup()){
-   MainActivity a=c.get();callInstanceMethod(a,"aiAssistant");((View)getField(a,"root")).findViewWithTag("ai-mic").performClick();callInstanceMethod(a,"aiNewChat");android.content.Intent data=new android.content.Intent().putStringArrayListExtra(android.speech.RecognizerIntent.EXTRA_RESULTS,new java.util.ArrayList<>(java.util.List.of("旧聊天语音")));a.onActivityResult(904,Activity.RESULT_OK,data);assertEquals("",((EditText)((View)getField(a,"root")).findViewWithTag("ai-message")).getText().toString());
-  }
- }
  @Test public void attachmentMenuCoversItsPlusAndKeepsTheCloseTargetInPlace(){
   for(String viewport:new String[]{"w400dp-h850dp-notnight","w320dp-h400dp-notnight"}){
    RuntimeEnvironment.setQualifiers(viewport);RuntimeEnvironment.setFontScale(viewport.startsWith("w320")?1.6f:1f);
    try(ActivityController<MainActivity> c=Robolectric.buildActivity(MainActivity.class).setup().visible()){
-    MainActivity a=c.get();callInstanceMethod(a,"aiAssistant");((PageMotion)getField(a,"pageMotion")).cancel();layout(a);View chat=getField(a,"root"),plus=chat.findViewWithTag("ai-attach");plus.performClick();MainActivity.NavigationOverlay menu=getField(a,"aiAttachmentMenu");menu.dispatchApplyWindowInsets(new WindowInsets.Builder().setInsets(WindowInsets.Type.systemBars(),Insets.of(0,24,0,24)).build());layout(a);menu.motion.set(1);View toggle=menu.findViewWithTag("ai-attach-toggle");Rect anchor=new Rect(),panel=new Rect(),close=new Rect();plus.getGlobalVisibleRect(anchor);menu.panel.getGlobalVisibleRect(panel);toggle.getGlobalVisibleRect(close);assertTrue("Menu must cover the original plus",panel.contains(anchor));assertEquals(anchor.centerX(),close.centerX(),1);assertEquals(anchor.centerY(),close.centerY(),1);assertTrue(panel.top>=0);toggle.performClick();assertFalse(menu.open);
+    MainActivity a=c.get();callInstanceMethod(a,"aiAssistant");((PageMotion)getField(a,"pageMotion")).cancel();layout(a);View chat=getField(a,"root"),plus=chat.findViewWithTag("ai-attach");plus.performClick();MainActivity.NavigationOverlay menu=getField(a,"aiAttachmentMenu");menu.dispatchApplyWindowInsets(new WindowInsets.Builder().setInsets(WindowInsets.Type.systemBars(),Insets.of(0,24,0,24)).build());layout(a);menu.motion.set(1);assertNull(menu.findViewWithTag("ai-attach-toggle"));Rect anchor=new Rect(),panel=new Rect();plus.getGlobalVisibleRect(anchor);menu.panel.getGlobalVisibleRect(panel);assertTrue("Menu must cover the original plus",panel.contains(anchor));assertTrue(panel.top>=0);assertEquals(1,menu.panel.getChildCount());assertTrue(menu.panel.getHeight()<=menu.body.getMeasuredHeight()+2);int[] location=new int[2];menu.getLocationOnScreen(location);long time=android.os.SystemClock.uptimeMillis();for(int action:new int[]{MotionEvent.ACTION_DOWN,MotionEvent.ACTION_UP}){MotionEvent event=MotionEvent.obtain(time,time,action,anchor.centerX()-location[0],anchor.centerY()-location[1],0);event.offsetLocation(location[0],location[1]);menu.dispatchTouchEvent(event);event.recycle();}assertFalse(menu.open);
    }
   }
  }
