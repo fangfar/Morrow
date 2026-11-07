@@ -65,15 +65,6 @@ final class ParcelPage extends LinearLayout {
   if(ParcelActivity.OPEN_SETTINGS.equals(intent.getAction())){intent.setAction(Intent.ACTION_MAIN);settings();return;}
   receive(intent);
  }
- void onActivityResult(int request,int result,Intent data){
-  if(request==501){if(result==Activity.RESULT_OK&&data!=null&&data.getData()!=null){if(importInput!=null&&importInput.isShown()&&currentSheet!=null)currentSheet.dismiss();ocr(data.getData());}return;}
-  if(request!=503)return;
-  if(data==null)return;
-  if(!Objects.equals(data.getStringExtra("epoch"),ParcelNotificationListener.settings(activity).getString("epoch","")))return;
-  if(result!=Activity.RESULT_OK){String error=data.getStringExtra("error");if(error!=null)readFeedback(error);return;}
-  try{List<ParcelRules.OcrLine> lines=ParcelOcr.lines(data.getStringExtra("ocrResult"));ingestCandidates(ParcelRules.extractImage(lines),"截图 OCR");}
-  catch(Exception e){readFeedback("图片识别结果无效，请更新插件后重试");}
- }
  void onRequestPermissionsResult(int request,String[] permissions,int[] grants){
   if(request!=502)return;
   if(grants.length==0||grants[0]!=android.content.pm.PackageManager.PERMISSION_GRANTED){ParcelNotificationListener.settings(activity).edit().putBoolean("reminders",false).apply();ParcelWorker.schedule(activity);message("未允许通知，提醒已关闭；快递管理和识别仍可使用");if(currentSheet!=null&&currentSheet.isShowing())settingsSection(1);}
@@ -99,7 +90,6 @@ final class ParcelPage extends LinearLayout {
   });
   button(body,"通知访问权限 · "+(notificationAccess()?"已授权":"未授权"),()->{try{activity.startActivity(new Intent(android.provider.Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS));}catch(ActivityNotFoundException|SecurityException e){message("请在系统设置中调整通知访问权限");}}).setTag("parcel-notification-access");
   if(prefs.getBoolean("recognitionError",false))body.addView(text("曾有识别结果保存失败，请检查剩余存储空间后重试。",13,muted));
-  button(body,OcrPluginActivity.installed(activity)?"图片识别插件 · 已安装":"下载图片识别插件",()->ocr(null)).setTag("parcel-ocr-plugin-settings");
   }
   if(section==1){body=settings;
   Switch reminders=toggle(body,"快递提醒",prefs.getBoolean("reminders",false));reminders.setOnCheckedChangeListener((v,enabled)->{prefs.edit().putBoolean("reminders",enabled).apply();if(!enabled)ParcelNotifications.cancelAll(activity);if(enabled&&Build.VERSION.SDK_INT>=33&&activity.checkSelfPermission(android.Manifest.permission.POST_NOTIFICATIONS)!=android.content.pm.PackageManager.PERMISSION_GRANTED)activity.requestPermissions(new String[]{android.Manifest.permission.POST_NOTIFICATIONS},502);ParcelWorker.schedule(activity);});
@@ -115,13 +105,13 @@ final class ParcelPage extends LinearLayout {
  private void restoreDraft(ParcelRecord restored){ParcelRepository.IO.execute(()->{ParcelRecord existing=restored.id==0?restored:ParcelDatabase.get(activity).parcels().get(restored.id);activity.runOnUiThread(()->{if(closed||existing==null)return;existing.code=restored.code;existing.station=restored.station;existing.trackingNumber=restored.trackingNumber;existing.carrier=restored.carrier;existing.state=restored.state;edit(existing);});});}
  private void receive(Intent intent){
   if(intent==null||!Intent.ACTION_SEND.equals(intent.getAction()))return;
-  try{String type=intent.getType();if(type!=null&&type.startsWith("image/")){android.net.Uri uri=Build.VERSION.SDK_INT>=33?intent.getParcelableExtra(Intent.EXTRA_STREAM,android.net.Uri.class):intent.getParcelableExtra(Intent.EXTRA_STREAM);ocr(uri);}else if("text/plain".equals(type)){CharSequence value=intent.getCharSequenceExtra(Intent.EXTRA_TEXT);if(value!=null&&value.length()<=ParcelRules.MAX_TEXT)recognize(value.toString(),"Android 分享文字");else message("分享文字为空或过长，请手动添加");}}
+  try{String type=intent.getType();if("text/plain".equals(type)){CharSequence value=intent.getCharSequenceExtra(Intent.EXTRA_TEXT);if(value!=null&&value.length()<=ParcelRules.MAX_TEXT)recognize(value.toString(),"Android 分享文字");else message("分享文字为空或过长，请手动添加");}}
   catch(RuntimeException e){message("无法读取分享内容，请重新分享");}
  }
  private LinearLayout column(){LinearLayout view=new LinearLayout(activity);view.setOrientation(LinearLayout.VERTICAL);return view;}
  private TextView text(String value,int size,int color){return ui.text(value,size,color);}
  private void icon(LinearLayout host,int drawable,String name,Runnable action){Button b=ui.iconAction(host,drawable,name,action);b.getCompoundDrawables()[0].setTint(ink);}
- private Button button(LinearLayout host,String name,Runnable action){Button b=ui.action(host,name,action);b.setBackgroundTintList(null);b.setTextColor(ink);b.setBackground(ui.bg(activity.getColor(R.color.parcel_soft),16));b.setGravity(Gravity.CENTER);LinearLayout.LayoutParams lp=(LinearLayout.LayoutParams)b.getLayoutParams();lp.width=host.getOrientation()==VERTICAL?-1:-2;lp.bottomMargin=ui.dp(4);return b;}
+ private Button button(LinearLayout host,String name,Runnable action){Button b=ui.action(host,name,action);b.setBackgroundTintList(null);b.setTextColor(ink);b.setBackground(ui.bg(activity.getColor(R.color.parcel_soft),16));b.setGravity(Gravity.CENTER);LinearLayout.LayoutParams lp=(LinearLayout.LayoutParams)b.getLayoutParams();lp.width="secondary-actions".equals(host.getTag())?0:host.getOrientation()==VERTICAL?-1:-2;lp.bottomMargin=ui.dp(4);return b;}
  private void feedbackViewHide(){if(!closed)feedback.setVisibility(GONE);}
  private void message(String value){if(closed)return;if(!isShown()||currentSheet!=null&&currentSheet.isShowing()){Toast.makeText(activity,value,Toast.LENGTH_LONG).show();return;}feedback.removeCallbacks(clearFeedback);feedback.setText(value);feedback.setVisibility(VISIBLE);feedback.postDelayed(clearFeedback,6000);}
  private void load(){
@@ -226,26 +216,17 @@ final class ParcelPage extends LinearLayout {
  private void delete(ParcelRecord p){ParcelRepository.IO.execute(()->{try{ParcelRepository repository=new ParcelRepository(activity);ParcelRecord removed=repository.delete(p.id);if(removed==null)return;activity.runOnUiThread(()->{if(closed)return;if(currentSheet!=null)currentSheet.dismiss();load();undoBar("已删除快递",()->ParcelRepository.IO.execute(()->{try{repository.restoreDeleted(removed);activity.runOnUiThread(this::load);}catch(RuntimeException e){activity.runOnUiThread(()->message("恢复失败，已有相同快递或记录已变更"));}}));});}catch(RuntimeException e){activity.runOnUiThread(()->message("删除失败，请重试"));}});}
  private boolean notificationAccess(){return androidx.core.app.NotificationManagerCompat.getEnabledListenerPackages(activity).contains(activity.getPackageName());}
  private void importSheet(){
-  LinearLayout body=sheet("读取快递信息");importInput=field(body,"粘贴取件信息，或选择图片（仅本机读取）","");importInput.setTag("parcel-import-text");importInput.setSingleLine(false);importInput.setMinLines(3);importInput.setFilters(new android.text.InputFilter[]{new android.text.InputFilter.LengthFilter(ParcelRules.MAX_TEXT)});
+  LinearLayout body=sheet("读取快递信息");importInput=field(body,"粘贴取件信息（仅本机读取）","");importInput.setTag("parcel-import-text");importInput.setSingleLine(false);importInput.setMinLines(3);importInput.setFilters(new android.text.InputFilter[]{new android.text.InputFilter.LengthFilter(ParcelRules.MAX_TEXT)});
   importError=text("",14,ui.DANGER);importError.setTag("parcel-import-feedback");importError.setVisibility(GONE);importError.setAccessibilityLiveRegion(ACCESSIBILITY_LIVE_REGION_POLITE);body.addView(importError);
-  EditText input=importInput;button(body,"读取文字",()->recognize(input.getText().toString(),"粘贴文字")).setTag("parcel-read-text");button(body,OcrPluginActivity.installed(activity)?"选择图片":"下载图片识别插件",()->ocr(null)).setTag("parcel-ocr-plugin");
-  button(body,"通知读取设置",()->settingsSection(0)).setTag("parcel-notification-settings");button(body,"手动添加",()->edit(new ParcelRecord()));
+  EditText input=importInput;LinearLayout readActions=ui.actionRow(body);button(readActions,"读取文字",()->recognize(input.getText().toString(),"粘贴文字")).setTag("parcel-read-text");
+  LinearLayout options=ui.actionRow(body);button(options,"通知读取设置",()->settingsSection(0)).setTag("parcel-notification-settings");button(options,"手动添加",()->edit(new ParcelRecord()));
  }
  private void readFeedback(String value){if(importError!=null&&currentSheet!=null&&currentSheet.isShowing()&&currentSheet.getWindow().getDecorView().findViewWithTag("parcel-import-feedback")==importError){importError.setText(value);importError.setVisibility(VISIBLE);}else message(value);}
- private void ocr(android.net.Uri uri){
-  if(uri==null&&OcrPluginActivity.installed(activity)){
-   try{ImagePicker.open(activity,501);}catch(ActivityNotFoundException e){readFeedback("系统没有可用的图片选择器");}
-   return;
-  }
-  Intent intent=new Intent(activity,OcrPluginActivity.class).putExtra("epoch",ParcelNotificationListener.settings(activity).getString("epoch",""));
-  if(uri!=null){intent.setDataAndType(uri,"image/*").addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);intent.setClipData(ClipData.newRawUri("待识别截图",uri));}
-  try{activity.startActivityForResult(intent,503);}catch(RuntimeException e){readFeedback("无法打开图片识别插件，请重试");}
- }
  private void recognize(String input,String source){
   ingestCandidates(ParcelRules.extract(input),source);
  }
  private void ingestCandidates(List<ParcelRules.Candidate> found,String source){
-  if(found.isEmpty()){readFeedback(source.equals("截图 OCR")?"未找到明确的取件码，请尝试其他图片或手动添加":"未找到明确的取件码，可检查上方文字或手动添加");return;}
+  if(found.isEmpty()){readFeedback("未找到明确的取件码，可检查上方文字或手动添加");return;}
   String epoch=ParcelNotificationListener.settings(activity).getString("epoch","");ParcelRepository.IO.execute(()->{int added=0;try{if(!epoch.equals(ParcelNotificationListener.settings(activity).getString("epoch","")))return;for(ParcelRules.Candidate c:found)if(new ParcelRepository(activity).ingest(ParcelNotificationListener.record(c,source,true)))added++;int count=added;activity.runOnUiThread(()->{if(closed)return;if(importInput!=null&&currentSheet!=null&&currentSheet.isShowing()&&currentSheet.getWindow().getDecorView().findViewWithTag("parcel-import-text")==importInput)currentSheet.dismiss();message(count==0?"识别结果已存在，未重复添加":"已读取 "+count+" 条，请展开记录核对后保存");load();});}catch(RuntimeException e){activity.runOnUiThread(()->{if(!closed)message("识别结果保存失败，请重试");});}});
  }
  private String trackingStateLabel(String state){switch(state){case "IN_TRANSIT":return "运输中";case "READY":return "到达取件点";case "DELIVERED":return "物流显示已签收";default:return "状态未知";}}
@@ -257,8 +238,8 @@ final class ParcelPage extends LinearLayout {
  }
  private void reminder(ParcelRecord p){
   LinearLayout body=sheet("未领取提醒");body.addView(text("提醒可能因省电、后台限制而延迟。请先在快递管理中开启提醒。",14,muted));
-  button(body,"选择日期与时间",()->pickReminder(p));
-  button(body,"取消本条提醒",()->saveReminder(p.id,0));
+  LinearLayout actions=ui.actionRow(body);button(actions,"选择日期与时间",()->pickReminder(p));
+  button(actions,"取消本条提醒",()->saveReminder(p.id,0));
  }
  private void pickReminder(ParcelRecord p){
   java.util.Calendar date=java.util.Calendar.getInstance();if(p.remindAt>System.currentTimeMillis())date.setTimeInMillis(p.remindAt);

@@ -31,7 +31,9 @@ jobs:
           persist-credentials: false
           fetch-depth: 0
       - name: Validate new release tag
-        run: python3 tests/ReleaseChecks.py "$RELEASE_TAG" --prepare
+        run: |
+          python3 tests/ReleaseChecks.py "$RELEASE_TAG" --prepare
+          echo "RELEASE_VERSION=${RELEASE_TAG#v}" >> "$GITHUB_ENV"
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
@@ -58,21 +60,23 @@ jobs:
           COURSELENS_KEY_PASSWORD: ${{ secrets.COURSELENS_KEY_PASSWORD }}
         run: |
           python3 tests/SigningChecks.py --signed
-          sh gradlew --no-daemon assembleRelease :app:lintLiteRelease :ocr-plugin:lintRelease :ocr-engine:lintRelease
-          python3 tests/ReleaseChecks.py "$RELEASE_TAG" --apk app/build/outputs/apk/lite/release/app-lite-release.apk --edition lite
-          python3 tests/OcrPluginChecks.py --host app/build/outputs/apk/lite/release/app-lite-release.apk --plugin ocr-plugin/build/outputs/apk/release/ocr-plugin-release.apk --release-base-url "https://github.com/$GITHUB_REPOSITORY/releases/download/$RELEASE_TAG"
+          sh gradlew --no-daemon assembleRelease :app:lintLiteRelease
+          python3 tests/ReleaseChecks.py "$RELEASE_TAG" --apk app/build/outputs/apk/lite/release/app-lite-release.apk
       - name: Save verified artifacts
         uses: actions/upload-artifact@v4
         with:
           name: morrow-release-${{ github.sha }}
-          path: app/build/release/*
+          path: |
+            app/build/release/Morrow-${{ env.RELEASE_VERSION }}.apk
+            app/build/release/SHA256SUMS
+            app/build/release/release-metadata.json
           if-no-files-found: error
           retention-days: 30
       - name: Create draft release
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release create "$RELEASE_TAG" app/build/release/* \
+          gh release create "$RELEASE_TAG" "app/build/release/Morrow-${RELEASE_VERSION}.apk" app/build/release/SHA256SUMS app/build/release/release-metadata.json \
             --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" \
             --draft --title "Morrow $RELEASE_TAG" --generate-notes
       - name: Remove temporary signing key

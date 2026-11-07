@@ -1,0 +1,72 @@
+<resources>
+    <style name="AccentBlue">
+        <item name="appAccent">#9DB4FF</item>
+        <item name="appOnAccent">#171717</item>
+        <item name="appSelection">#3F485E</item>
+        <item name="android:colorAccent">?attr/appAccent</item>
+        <item name="android:colorControlActivated">?attr/appAccent</item>
+    </style>
+    <style name="AccentCyan">
+        <item name="appAccent">#63D6F1</item>
+        <item name="appOnAccent">#171717</item>
+        <item name="appSelection">#31505A</item>
+        <item name="android:colorAccent">?attr/appAccent</item>
+        <item name="android:colorControlActivated">?attr/appAccent</item>
+    </style>
+    <style name="AccentGreen">
+        <item name="appAccent">#64D7B8</item>
+        <item name="appOnAccent">#171717</item>
+        <item name="appSelection">#31514C</item>
+        <item name="android:colorAccent">?attr/appAccent</item>
+        <item name="android:colorControlActivated">?attr/appAccent</item>
+    </style>
+    <style name="AccentLime">
+        <item name="appAccent">#C3D86D</item>
+        <item name="appOnAccent">#171717</item>
+        <item name="appSelection">#495139</item>
+        <item name="android:colorAccent">?attr/appAccent</item>
+        <item name="android:colorControlActivated">?attr/appAccent</item>
+    </style>
+    <style name="AccentYellow">
+        <item name="appAccent">#F6D46F</item>
+        <item name="appOnAccent">#171717</item>
+        <item name="appSelection">#56503A</item>
+        <item name="android:colorAccent">?attr/appAccent</item>
+        <item name="android:colorControlActivated">?attr/appAccent</item>
+    </style>
+    <style name="AccentOrange">
+        <item name="appAccent">#FFA68B</item>
+        <item name="appOnAccent">#171717</item>
+        <item name="appSelection">#584441</item>
+        <item name="android:colorAccent">?attr/appAccent</item>
+        <item name="android:colorControlActivated">?attr/appAccent</item>
+    </style>
+    <style name="AccentPink">
+        <item name="appAccent">#EE70AB</item>
+        <item name="appOnAccent">#FFFFFF</item>
+        <item name="appSelection">#482B3B</item>
+        <item name="android:colorAccent">?attr/appAccent</item>
+        <item name="android:colorControlActivated">?attr/appAccent</item>
+    </style>
+    <style name="AccentMagenta">
+        <item name="appAccent">#EA9BEF</item>
+        <item name="appOnAccent">#171717</item>
+        <item name="appSelection">#52425A</item>
+        <item name="android:colorAccent">?attr/appAccent</item>
+        <item name="android:colorControlActivated">?attr/appAccent</item>
+    </style>
+    <style name="AccentPurple">
+        <item name="appAccent">#CBACFF</item>
+        <item name="appOnAccent">#171717</item>
+        <item name="appSelection">#4B465E</item>
+        <item name="android:colorAccent">?attr/appAccent</item>
+        <item name="android:colorControlActivated">?attr/appAccent</item>
+    </style>
+    <style name="AccentBlack">
+        <item name="appAccent">#F1F3F5</item>
+        <item name="appOnAccent">#171717</item>
+        <item name="appSelection">#54585B</item>
+        <item name="android:colorAccent">?attr/appAccent</item>
+        <item name="android:colorControlActivated">?attr/appAccent</item>
+    </style>
+</resources>

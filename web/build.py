@@ -30,5 +30,4 @@ if __name__ == '__main__':
         page = page.replace(old, f'data-download="{edition}" href="{html.escape(url, quote=True)}"')
     (output / 'index.html').write_text(page, encoding='utf-8')
     (output / 'remote/config.json').write_bytes(config_bytes)
-    shutil.copy2(ROOT / 'remote/ocr-plugin.json', output / 'remote/ocr-plugin.json')
     (output / '.nojekyll').touch()

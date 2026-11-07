@@ -13,6 +13,14 @@ final class Appearance {
  static final String PREFS="appSettings",KEY="themeMode";
  static final int SYSTEM=0,LIGHT=1,DARK=2;
 
+ static final String[] ACCENT_NAMES={"蓝色","青色","绿色","青柠绿","黄色","橙色","粉色","洋红色","紫色","黑色"};
+ static final int[] ACCENT_SWATCHES={0xff3563e9,0xff00a8d6,0xff00a98f,0xff90b900,0xfff5c634,0xfff27757,0xffee70ab,0xffcf50d5,0xff9f57ed,0xff171717};
+ private static final int[] ACCENT_STYLES={R.style.AccentBlue,R.style.AccentCyan,R.style.AccentGreen,R.style.AccentLime,R.style.AccentYellow,R.style.AccentOrange,R.style.AccentPink,R.style.AccentMagenta,R.style.AccentPurple,R.style.AccentBlack};
+ static int accent(Context context){try{int value=context.getSharedPreferences(PREFS,0).getInt("accentColor",6);return value>=0&&value<ACCENT_NAMES.length?value:6;}catch(RuntimeException e){return 6;}}
+ static void accent(Context context,int value){context.getSharedPreferences(PREFS,0).edit().putInt("accentColor",value>=0&&value<ACCENT_NAMES.length?value:6).apply();}
+ static int accentStyle(Context context){return ACCENT_STYLES[accent(context)];}
+ static int themeColor(Context context,int attribute){android.util.TypedValue value=new android.util.TypedValue();if(!context.getTheme().resolveAttribute(attribute,value,true))throw new IllegalStateException("Missing app palette");return value.data;}
+
  private Appearance(){}
 
  static int mode(Context context){

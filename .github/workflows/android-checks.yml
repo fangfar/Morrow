@@ -63,18 +63,13 @@ jobs:
         if: steps.scope.outputs.scope != 'config' && steps.scope.outputs.scope != 'docs'
         run: |
           python3 tests/ReleaseChecksTest.py
-          python3 tests/OcrPluginChecksTest.py
       - name: Signing boundaries without official secrets
         if: steps.scope.outputs.scope != 'config' && steps.scope.outputs.scope != 'docs'
         run: python3 tests/SigningChecks.py
-      - name: Build and test lite QA and OCR plugin
+      - name: Build and test QA application
         if: steps.scope.outputs.scope != 'config' && steps.scope.outputs.scope != 'docs'
         run: |
-          sh gradlew --no-daemon -PqaBuild :app:assembleLiteDebug :ocr-plugin:assembleDebug :app:assembleLiteDebugAndroidTest :ocr-plugin:assembleDebugAndroidTest :app:testLiteDebugUnitTest :app:lintLiteDebug :ocr-plugin:lintDebug :ocr-engine:lintDebug
-      - name: Verify OCR plugin isolation
-        if: steps.scope.outputs.scope != 'config' && steps.scope.outputs.scope != 'docs'
-        run: |
-          python3 tests/OcrPluginChecks.py --host app/build/outputs/apk/lite/debug/app-lite-debug.apk --plugin ocr-plugin/build/outputs/apk/debug/ocr-plugin-debug.apk
+          sh gradlew --no-daemon -PqaBuild :app:assembleLiteDebug :app:assembleLiteDebugAndroidTest :app:testLiteDebugUnitTest :app:lintLiteDebug
       - name: Upload QA APKs
         if: steps.scope.outputs.scope != 'config' && steps.scope.outputs.scope != 'docs'
         uses: actions/upload-artifact@v4
@@ -82,7 +77,6 @@ jobs:
           name: courselens-qa-${{ github.sha }}
           path: |
             app/build/outputs/apk/lite/debug/*.apk
-            ocr-plugin/build/outputs/apk/debug/*.apk
           if-no-files-found: error
           retention-days: 7
       - name: Upload test APK and lint reports
@@ -92,8 +86,6 @@ jobs:
           name: courselens-checks-${{ github.sha }}
           path: |
             app/build/outputs/apk/androidTest/*/debug/*.apk
-            ocr-plugin/build/outputs/apk/androidTest/debug/*.apk
-            ocr-plugin/build/reports/lint-results-debug.*
             app/build/reports/lint-results-*.html
             app/build/reports/lint-results-*.xml
             app/build/reports/tests/test*DebugUnitTest/**

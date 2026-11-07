@@ -25,7 +25,7 @@ final class SideNavigation extends FrameLayout {
  private float progress;
  private boolean open,routing,backRegistered;
  private final Motion.Progress motion=new Motion.Progress(0,this::render);
- private float backStart,dragStart,dragProgress,releaseVelocity;private boolean dragging;private VelocityTracker velocity;
+ private float backStart,dragStart,dragY,dragProgress,releaseVelocity;private boolean dragging,verticalDrag;private VelocityTracker velocity;
 
  SideNavigation(Activity activity,View content,int surface,int card,int ink,IntConsumer navigate,Runnable settings){
   super(activity);this.activity=activity;this.settings=settings;this.content=content;this.surface=surface;this.ink=ink;ui=new SecondaryUi(activity);setTag("side-navigation");setBackgroundColor(card);
@@ -33,21 +33,19 @@ final class SideNavigation extends FrameLayout {
   panel.setOnApplyWindowInsetsListener((view,insets)->{view.setPadding(ui.dp(16),insets.getSystemWindowInsetTop()+ui.dp(20),ui.dp(8),insets.getSystemWindowInsetBottom()+ui.dp(16));return insets;});
   TextView title=ui.text("Morrow",28,ink);title.setPadding(ui.dp(8),ui.dp(16),0,ui.dp(16));panel.addView(title);
   ScrollView scroll=new ScrollView(activity);panel.addView(scroll,new LinearLayout.LayoutParams(-1,0,1));items=new LinearLayout(activity);items.setOrientation(LinearLayout.VERTICAL);scroll.addView(items);
-  String[] names={"课表","任务","快递","AI 助手"},tags={"drawer-timetable","drawer-tasks","drawer-parcels","drawer-ai"};int[] icons={R.drawable.ic_calendar,R.drawable.ic_tasks,R.drawable.ic_parcel,R.drawable.ic_chat};
+  String[] names={"课表","任务","快递","AI 助手"},tags={"drawer-timetable","drawer-tasks","drawer-parcels","drawer-ai"};int[] icons={R.drawable.ic_calendar,R.drawable.ic_tasks,R.drawable.ic_parcel,R.drawable.ic_chat_outline};
   for(int i=0;i<names.length;i++){int index=i;destinations[i]=item(names[i],icons[i],tags[i],()->choose(()->navigate.accept(index)));items.addView(destinations[i],new LinearLayout.LayoutParams(-1,-2));}
   footer=new LinearLayout(activity);footer.setPadding(ui.dp(8),ui.dp(12),0,0);panel.addView(footer,new LinearLayout.LayoutParams(-1,-2));Button preferences=ui.iconAction(footer,R.drawable.ic_settings,"设置",()->choose(settings));preferences.setTag("drawer-settings");preferences.getCompoundDrawables()[0].setTint(ink);preferences.setBackground(ui.bg(surface,24));((LinearLayout.LayoutParams)preferences.getLayoutParams()).leftMargin=0;
   foreground=new FrameLayout(activity);foreground.setBackgroundColor(surface);foreground.setOutlineProvider(new ViewOutlineProvider(){@Override public void getOutline(View view,android.graphics.Outline outline){outline.setRoundRect(0,0,view.getWidth(),view.getHeight(),ui.dp(28)*progress);}});foreground.addView(content,new LayoutParams(-1,-1));addView(foreground,new LayoutParams(-1,-1));
   shade=new View(activity);shade.setTag("drawer-shade");shade.setBackgroundColor(android.graphics.Color.BLACK);shade.setContentDescription("关闭导航菜单");shade.setFocusable(true);shade.setOnClickListener(v->close(true));shade.setVisibility(GONE);foreground.addView(shade,new LayoutParams(-1,-1));
  }
  void setExtra(View extra){while(items.getChildCount()>destinations.length)items.removeViewAt(destinations.length);if(extra!=null)items.addView(extra);}
- void setChatTools(View search,Runnable newChat){
+ void setChatTools(Runnable newChat){
   footer.removeAllViews();footer.setGravity(Gravity.CENTER_VERTICAL);
   Button fresh=ui.action(footer,"聊天",()->choose(newChat));fresh.setTag("ai-history-new-chat");fresh.setCompoundDrawablesWithIntrinsicBounds(R.drawable.ic_new_chat,0,0,0);fresh.getCompoundDrawables()[0].setTint(ui.ON_PRIMARY);fresh.setCompoundDrawablePadding(ui.dp(8));fresh.setLayoutParams(new LinearLayout.LayoutParams(-2,ui.dp(48)));
   footer.addView(new View(activity),new LinearLayout.LayoutParams(0,1,1));
   Button avatar=ui.iconAction(footer,R.drawable.ic_person,"设置",()->choose(settings));avatar.setTag("drawer-settings");
-  if(panel.findViewWithTag("ai-history-search")!=null){View old=panel.findViewWithTag("ai-history-search");((android.view.ViewGroup)old.getParent()).removeView(old);}
-  search.setVisibility(GONE);panel.addView(search,1,new LinearLayout.LayoutParams(-1,ui.dp(48)));
-  TextView title=(TextView)panel.getChildAt(0);title.setCompoundDrawablesWithIntrinsicBounds(0,0,R.drawable.ic_search,0);title.getCompoundDrawables()[2].setTint(ink);title.setContentDescription("Morrow，点击搜索聊天");title.setOnClickListener(v->{search.setVisibility(VISIBLE);search.requestFocus();((android.view.inputmethod.InputMethodManager)activity.getSystemService(android.content.Context.INPUT_METHOD_SERVICE)).showSoftInput(search,android.view.inputmethod.InputMethodManager.SHOW_IMPLICIT);});
+
  }
  void route(Runnable action){choose(action);}
  private TextView item(String title,int drawable,String tag,Runnable action){
@@ -55,7 +53,7 @@ final class SideNavigation extends FrameLayout {
   android.graphics.drawable.Drawable icon=activity.getDrawable(drawable).mutate();icon.setTint(ink);icon.setBounds(0,0,ui.dp(24),ui.dp(24));item.setCompoundDrawables(icon,null,null,null);item.setCompoundDrawablePadding(ui.dp(16));item.setOnClickListener(v->action.run());ui.focusOutline(item);return item;
  }
  void select(int selected){
-  for(int i=0;i<destinations.length;i++){boolean active=i==selected;destinations[i].setSelected(active);destinations[i].setTypeface(null,active?Typeface.BOLD:Typeface.NORMAL);destinations[i].setBackground(active?ui.bg(surface,16):null);}
+  for(int i=0;i<destinations.length;i++){boolean active=i==selected;destinations[i].setSelected(active);destinations[i].setTypeface(null,active?Typeface.BOLD:Typeface.NORMAL);destinations[i].setBackground(active?ui.bg(surface,16):null);android.graphics.drawable.Drawable icon=activity.getDrawable(AppNavigation.icon(i,active)).mutate();icon.setTint(active?ink:ui.MUTED);icon.setBounds(0,0,ui.dp(24),ui.dp(24));destinations[i].setCompoundDrawables(icon,null,null,null);}
  }
  boolean isOpen(){return panel.getVisibility()==VISIBLE;}
  boolean isRouting(){return routing;}
@@ -83,8 +81,8 @@ final class SideNavigation extends FrameLayout {
  private void render(float value){progress=value;foreground.setTranslationX(drawerWidth*value);foreground.setClipToOutline(value>0);foreground.invalidateOutline();shade.setAlpha(.18f*value);panel.setAlpha(.65f+.35f*value);panel.setTranslationX(-ui.dp(12)*(1-value));}
  @Override public boolean onInterceptTouchEvent(MotionEvent event){
   if(!isOpen()||routing)return super.onInterceptTouchEvent(event);
-  if(event.getActionMasked()==MotionEvent.ACTION_DOWN){recycleVelocity();velocity=VelocityTracker.obtain();velocity.addMovement(event);dragStart=event.getX();dragProgress=progress;dragging=false;}
-  else if(event.getActionMasked()==MotionEvent.ACTION_MOVE&&Math.abs(event.getX()-dragStart)>ViewConfiguration.get(getContext()).getScaledTouchSlop()){motion.stop();dragging=true;return true;}
+  if(event.getActionMasked()==MotionEvent.ACTION_DOWN){recycleVelocity();velocity=VelocityTracker.obtain();velocity.addMovement(event);dragStart=event.getX();dragY=event.getY();dragProgress=progress;dragging=verticalDrag=false;}
+  else if(event.getActionMasked()==MotionEvent.ACTION_MOVE&&!verticalDrag){float dx=Math.abs(event.getX()-dragStart),dy=Math.abs(event.getY()-dragY);if(Math.max(dx,dy)>ViewConfiguration.get(getContext()).getScaledTouchSlop()){if(dy>=dx)verticalDrag=true;else{motion.stop();dragProgress=progress;dragging=true;return true;}}}
   else if(event.getActionMasked()==MotionEvent.ACTION_UP||event.getActionMasked()==MotionEvent.ACTION_CANCEL)recycleVelocity();return super.onInterceptTouchEvent(event);
  }
  @Override public boolean onTouchEvent(MotionEvent event){
