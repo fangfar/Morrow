@@ -384,21 +384,23 @@ public class MainActivity extends Activity {
    ((ScrollView)root.getChildAt(1)).scrollTo(0,settingsScrollY);return;
   }
   LinearLayout body=secondary("设置","",this::closeSettings);
-  LinearLayout chat=settingsGroup(body,"聊天");
-  option(chat,R.drawable.ic_settings,"API 配置","供应商、模型与密钥",this::aiSettings).setTag("settings-api");
-  option(chat,R.drawable.ic_notes,"项目记忆","查看与编辑当前项目记忆",this::aiMemory).setTag("settings-ai-memory");
-  option(chat,R.drawable.ic_info,"数据与说明","简要使用说明",this::aiDataInfo).setTag("settings-ai-info");
   LinearLayout timetable=settingsGroup(body,"课表");
   option(timetable,R.drawable.ic_calendar,"课表管理","",this::timetableManagement).setTag("timetable-management");
-  option(timetable,R.drawable.ic_calendar,"开学日期",term,this::termPicker).setTag("settings-term");
+  option(timetable,R.drawable.ic_calendar,"开学日期","",this::termPicker).setTag("settings-term");
   option(timetable,R.drawable.ic_calendar,"作息时间","",this::timesForm).setTag("settings-times");
-  option(timetable,R.drawable.ic_widget,"桌面小组件","",this::widgetAddPage).setTag("add-home-widget");
   option(timetable,R.drawable.ic_person,"学校账号","",()->login(this::menu)).setTag("school-account");
-  LinearLayout software=settingsGroup(body,"应用");
-  option(software,R.drawable.ic_palette,"外观","",this::appearanceSettings).setTag("dark-mode-setting");
-  option(software,R.drawable.ic_notes,"数据管理","",this::dataManagement).setTag("data-management");
-  option(software,R.drawable.ic_settings,"权限管理","",this::openPermissionSettings).setTag("permission-settings");
-  remoteStatus=null;option(software,R.drawable.ic_info,"关于软件","",this::about).setTag("about-app");
+  LinearLayout chat=settingsGroup(body,"AI 助手");
+  option(chat,R.drawable.ic_settings,"API 配置","",this::aiSettings).setTag("settings-api");
+  option(chat,R.drawable.ic_notes,"项目记忆","",this::aiMemory).setTag("settings-ai-memory");
+  option(chat,R.drawable.ic_info,"数据与说明","",this::aiDataInfo).setTag("settings-ai-info");
+  LinearLayout appearance=settingsGroup(body,"外观与桌面");
+  option(appearance,R.drawable.ic_palette,"外观","",this::appearanceSettings).setTag("dark-mode-setting");
+  option(appearance,R.drawable.ic_widget,"桌面小组件","",this::widgetAddPage).setTag("add-home-widget");
+  LinearLayout privacy=settingsGroup(body,"隐私与数据");
+  option(privacy,R.drawable.ic_settings,"权限管理","",this::openPermissionSettings).setTag("permission-settings");
+  option(privacy,R.drawable.ic_notes,"数据管理","",this::dataManagement).setTag("data-management");
+  LinearLayout about=settingsGroup(body,"关于");
+  remoteStatus=null;option(about,R.drawable.ic_info,"关于软件","",this::about).setTag("about-app");
   settingsPage=root;
  }
  private void timetableManagement(){
@@ -634,6 +636,8 @@ public class MainActivity extends Activity {
   LinearLayout brand=new LinearLayout(this);brand.setOrientation(LinearLayout.VERTICAL);brand.setGravity(Gravity.CENTER);brand.setPadding(0,dp(24),0,dp(32));ImageView logo=new ImageView(this);logo.setImageResource(R.mipmap.ic_launcher);logo.setContentDescription("Morrow App 图标");logo.setTag("about-app-icon");brand.addView(logo,new LinearLayout.LayoutParams(dp(80),dp(80)));TextView name=text("Morrow",23,NAVY);name.setTypeface(null,Typeface.BOLD);name.setPadding(0,dp(20),0,dp(10));brand.addView(name);body.addView(brand,new LinearLayout.LayoutParams(-1,-2));
   LinearLayout updates=settingsGroup(body,"");option(updates,R.drawable.ic_sync,"软件更新",versionLabel(),this::updateSettings).setTag("update-settings");
   LinearLayout links=settingsGroup(body,"");option(links,R.drawable.ic_notes,"官网","morrow.xvyan.cn",()->openRemoteLink("https://morrow.xvyan.cn/")).setTag("official-website");option(links,R.drawable.ic_notes,"GitHub 仓库","fangfar/Morrow",()->openRemoteLink(RemoteConfig.REPOSITORY)).setTag("public-repository");
+  String feedbackGroup="1135218563",feedbackLink="https://qun.qq.com/universal-share/share?ac=1&authKey=qF9e8dvcJ7nEJObP6TFs8LMcYxpXsUTi%2Bp5w7p4i4Uz9t5KKpSFJiojPkJruxuXK&busi_data=eyJncm91cENvZGUiOiIxMTM1MjE4NTYzIiwidG9rZW4iOiI1N0hSUCs2VTBuWEZlYmxaQW5tSFFhU1BYVlNWRDdleENLQVQwQU9iRVlSWUxGNTQ3UXZ2M1VlTm01K3NjUHh4IiwidWluIjoiNDk4NDYyNDE5In0%3D&data=LzelMJC9i4cQgPLZipJckbXjhtabq0AgxwzqiZDO_e7RmulW4iNAunDsuo8qqhc8HC9FYsRYUouttgYOr-05Hg&svctype=4&tempid=h5_group_info";
+  LinearLayout feedback=option(links,R.drawable.ic_person,"QQ 群反馈",feedbackGroup,()->openRemoteLink(feedbackLink));feedback.setTag("feedback-qq-group");feedback.setTooltipText("长按复制群号");feedback.setOnLongClickListener(v->{((ClipboardManager)getSystemService(CLIPBOARD_SERVICE)).setPrimaryClip(ClipData.newPlainText("反馈 QQ 群",feedbackGroup));toast("反馈群号已复制");return true;});
   remoteStatus=null;
  }
 
