@@ -18,9 +18,13 @@ final class AppNavigation extends LinearLayout {
  }
  private int dp(int value){return Math.round(value*getResources().getDisplayMetrics().density);}
  private int muted=0xff999999;
+ static int icon(int index,boolean selected){
+  int[] outlined={R.drawable.ic_calendar,R.drawable.ic_tasks,R.drawable.ic_parcel,R.drawable.ic_chat_outline},filled={R.drawable.ic_calendar_filled,R.drawable.ic_tasks_filled,R.drawable.ic_parcel_filled,R.drawable.ic_chat};
+  return selected?filled[index]:outlined[index];
+ }
  void select(int selected){select(selected,muted);}
  void select(int selected,int muted){
-  this.muted=muted;int[] outlined={R.drawable.ic_calendar,R.drawable.ic_tasks,R.drawable.ic_parcel,R.drawable.ic_chat},filled={R.drawable.ic_calendar_filled,R.drawable.ic_tasks_filled,R.drawable.ic_parcel_filled,R.drawable.ic_chat};
-  for(int i=0;i<tabs.length;i++){boolean active=i==selected;ImageButton tab=tabs[i];tab.setSelected(active);tab.setImageResource(active?filled[i]:outlined[i]);tab.setImageTintList(ColorStateList.valueOf(active?ink:muted));}
+  this.muted=muted;
+  for(int i=0;i<tabs.length;i++){boolean active=i==selected;ImageButton tab=tabs[i];tab.setSelected(active);tab.setImageResource(icon(i,active));tab.setImageTintList(ColorStateList.valueOf(active?ink:muted));}
  }
 }

@@ -60,48 +60,6 @@ final class ParcelRules {
   }
   return new ArrayList<>(results.values());
  }
- static final class OcrLine {
-  final String text;final int left,top,right,bottom;
-  OcrLine(String text,int left,int top,int right,int bottom){this.text=normalize(text).replaceAll("(?<=[\\p{IsHan}])\\s+(?=[\\p{IsHan}])","");this.left=left;this.top=top;this.right=right;this.bottom=bottom;}
-  int height(){return Math.max(1,bottom-top);}
- }
- static List<Candidate> extractImage(List<OcrLine> lines){
-  if(lines==null||lines.size()>1000)return Collections.emptyList();int length=0;for(OcrLine line:lines){length+=line.text.length();if(length>MAX_TEXT)return Collections.emptyList();}
-  Map<String,Candidate> found=new LinkedHashMap<>();
-  for(OcrLine label:lines){
-   if(!PICKUP_LABEL.matcher(label.text).find()||SENSITIVE.matcher(label.text).find())continue;
-   List<Candidate> codes=extract("快递\n"+label.text);OcrLine codeLine=label;
-   if(codes.isEmpty()){
-    double nearest=Double.MAX_VALUE;
-    for(OcrLine line:lines){
-     if(line==label||SENSITIVE.matcher(line.text).find()||PICKUP_LABEL.matcher(line.text).find())continue;
-     int h=Math.max(label.height(),line.height());boolean sameRow=Math.min(label.bottom,line.bottom)-Math.max(label.top,line.top)>Math.min(label.height(),line.height())/2;
-     if(sameRow?line.left<label.right||line.left-label.right>h*6:line.top<label.bottom||line.top-label.bottom>label.height()*3||Math.abs(line.left-label.left)>h*4)continue;
-     String value=line.text.replaceAll("\\s","");if(!STRONG_CODE.matcher(value).matches()||!validCode(value))continue;
-     double distance=sameRow?Math.max(0,line.left-label.right):Math.max(0,line.top-label.bottom)*4+Math.abs(line.left-label.left);
-     if(distance<nearest){nearest=distance;codeLine=line;codes=Collections.singletonList(new Candidate(value,"","","ocr-layout-v2",85));}
-    }
-   }
-   String station="",tracking="";int best=Integer.MAX_VALUE;
-   for(OcrLine line:lines){
-    if(line.top>codeLine.bottom||codeLine.top-line.bottom>Math.max(label.height(),codeLine.height())*10)continue;
-    Matcher named=NAMED_STATION.matcher(line.text);if(named.find()&&line.text.length()<=80){int distance=Math.abs(codeLine.top-line.bottom);if(distance<best){best=distance;station=named.group(1);}}
-    Matcher waybill=TRACKING.matcher(line.text);if(waybill.find())tracking=waybill.group(1);
-   }
-   List<OcrLine> below=new ArrayList<>(lines);below.sort(Comparator.comparingInt(line->line.top));
-   StringBuilder nearby=new StringBuilder(label.text);
-   for(OcrLine line:below){
-    if(line==label||line.top<label.bottom)continue;
-    if(line.top-label.bottom>label.height()*8||PICKUP_LABEL.matcher(line.text).find())break;
-    if(SENSITIVE.matcher(line.text).find())break;
-    if(line.right>label.left&&line.left<label.right)nearby.append(line.text);
-   }
-   Matcher address=STATION.matcher(nearby);if(address.find())station=address.group(1).trim();
-   for(Candidate c:codes){Candidate value=new Candidate(c.code,codes.size()==1?station:"",codes.size()==1?tracking:"","ocr-layout-v2",85);found.putIfAbsent(c.code+"\n"+value.station,value);}
-  }
-  if(found.isEmpty()&&lines.stream().noneMatch(line->PICKUP_LABEL.matcher(line.text).find())){StringBuilder text=new StringBuilder();for(OcrLine line:lines)text.append(line.text).append('\n');for(Candidate c:extract(text.toString()))found.put(c.code+"\n"+c.station,new Candidate(c.code,c.station,c.tracking,"ocr-text-v2",85));}
-  return new ArrayList<>(found.values());
- }
  private static boolean validCode(String code){
   if(code.length()<3||code.length()>20||!code.matches(".*[0-9].*"))return false;
   if(code.matches("[0-9]+"))return code.length()>=4&&code.length()<=8;

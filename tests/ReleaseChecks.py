@@ -38,7 +38,7 @@ def check_new_version(code, previous_codes):
 def check_edition(files, edition):
     models = any(name.startswith('assets/mlkit-google-ocr-models/') for name in files)
     engine = any('libmlkit_google_ocr_pipeline.so' in name for name in files)
-    if (edition == 'full' and not (models and engine)) or (edition == 'lite' and (models or engine)):
+    if edition != 'lite' or models or engine:
         raise ValueError('APK contents do not match the selected edition')
 
 
@@ -50,7 +50,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("tag")
     parser.add_argument("--apk", type=Path)
-    parser.add_argument("--edition", choices=["lite", "full"], default="lite")
+    parser.add_argument("--edition", choices=["lite"], default="lite", help=argparse.SUPPRESS)
     parser.add_argument("--prepare", action="store_true", help="Reject existing tags and non-increasing versionCode")
     args = parser.parse_args()
     name, code = version((ROOT / "app/build.gradle").read_text(encoding="utf-8"), args.tag)
@@ -79,14 +79,14 @@ def main():
         check_edition(archive.namelist(), args.edition)
     output = ROOT / "app/build/release"
     output.mkdir(parents=True, exist_ok=True)
-    filename = f"Morrow-{name}-{args.edition}.apk"
+    filename = f"Morrow-{name}.apk"
     shutil.copyfile(args.apk, output / filename)
     digest = hashlib.sha256((output / filename).read_bytes()).hexdigest()
-    with (output / "SHA256SUMS").open("w" if args.edition == "lite" else "a", encoding="utf-8") as checksums:
+    with (output / "SHA256SUMS").open("w", encoding="utf-8") as checksums:
         checksums.write(f"{digest}  {filename}\n")
     metadata = {"tag": args.tag, "sourceCommit": run("git", "rev-parse", "HEAD").strip(), "package": PACKAGE,
-                "versionName": name, "versionCode": code, "edition": args.edition, "signingCertificateSHA256": fingerprint, "apkSHA256": digest}
-    (output / f"release-metadata-{args.edition}.json").write_text(json.dumps(metadata, indent=2) + "\n", encoding="utf-8")
+                "versionName": name, "versionCode": code, "signingCertificateSHA256": fingerprint, "apkSHA256": digest}
+    (output / "release-metadata.json").write_text(json.dumps(metadata, indent=2) + "\n", encoding="utf-8")
     print(f"Validated signed release APK: {filename} ({digest})")
 
 

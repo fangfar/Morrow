@@ -39,7 +39,6 @@ android {
  buildTypes {
   debug {
    if (qaBuild) applicationIdSuffix '.qa'; else signingConfig signingConfigs.fixed
-   manifestPlaceholders = [qaOcrManifest: qaBuild ? providers.gradleProperty('qaOcrManifest').getOrElse('') : '']
   }
   release { if (!qaBuild) signingConfig signingConfigs.fixed }
  }

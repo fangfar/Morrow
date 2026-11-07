@@ -40,6 +40,5 @@ public class ParcelActivity extends Activity {
  @Override protected void onDestroy(){page.close();sideNavigation.dismiss();super.onDestroy();}
  @Override protected void onSaveInstanceState(Bundle out){super.onSaveInstanceState(out);page.saveState(out);}
  @Override protected void onNewIntent(Intent intent){super.onNewIntent(intent);setIntent(intent);page.handleIntent(intent);}
- @Override protected void onActivityResult(int request,int result,Intent data){super.onActivityResult(request,result,data);page.onActivityResult(request,result,data);}
  @Override public void onRequestPermissionsResult(int request,String[] permissions,int[] grants){super.onRequestPermissionsResult(request,permissions,grants);page.onRequestPermissionsResult(request,permissions,grants);}
 }

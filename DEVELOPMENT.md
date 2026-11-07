@@ -23,13 +23,13 @@
 
 - AI 与课表底栏切换保留聊天草稿、滚动及正在生成的回复；考试按真实时间放在对应日期列，与重叠课程分列；课间及课外考试扩展时间轴，不单独占考试行。未知开始时间仅在日期标记及详情显示，未知结束时间明确标注；可选 end_time 保留旧考试数据兼容。切周同步调整网格高度，课表缓存检查考试和作息变化。缓存课表重新挂载时须让 WeekPager 完成布局，避免首次横滑才重置位置。回归包含 `TimetableExamTest` 与隔离包 `aiOnly` 仪器检查；`TimetableReturnChecks` 覆盖 AI 返回后的首次左右滑动。
 
-- 聊天主界面顶部提供统一侧栏、独立临时聊天和菜单；强度通过输入框内轮盘选择。AI 主页面返回直接退出，课表右上角菜单不再重复提供 AI 入口；发送和停止共用居中的 ImageButton，强调色统一使用 PRIMARY；思考强度使用保持键盘的分档滑杆浮层，粉色填充跟随滑块，切换沿用 Motion 动效；加号菜单不夺取输入焦点或收起键盘。侧栏合并模块导航与项目聊天列表，底部左侧新聊天、右侧头像设置；项目菜单进入独立项目列表与新建页。临时聊天仅存内存，不读取已有项目记忆，不写入聊天历史；切回普通聊天或进程结束后清除。已移除应用内语音识别、麦克风按钮、设置入口及识别活动声明；不申请 RECORD_AUDIO。附件加号提供拍照、照片、文件与强度入口；手机信息与相机权限统一在设置 → 权限管理。菜单使用共享 MotionOverlay，左下方覆盖加号，去除空白底栏和 × 控件，原加号位置的重复触摸由覆盖面板处理；重复点击加号或收起键盘关闭；强度档位同步更新轮盘指针。图片直接上传 DeepSeek Files API，文件 ID 随多模态消息发送，上传在按发送时发生，失败可重试，远端文件 30 天自动过期。图片不再需要 OCR 插件；单图限 8 MB / 3200 万像素，文件读取限 10 MB；UTF-8 文本和 DOCX 提取正文（最多 64000 字），PDF 由系统渲染为图片（最多 4 页），每次最多 4 个手选附件或页面，独立于 2000 字输入框。聊天长按确认后可删除，保留项目记忆；最后一个聊天删除后补空聊天。所有主页面与二级页使用共享顶部边距，主页面大字号标题放到按钮下方；菜单不改变输入框行数。主题默认粉色，用户可在外观选择强调色，删除动作保留警示色。用户消息使用主题浅粉气泡，助手正文无背景框；标题按级别区分字号和粗细，正文、加粗与等宽代码分别呈现，流式与历史消息使用同一排版。对话滚动层铺满聊天页面，允许文字滚入顶部按钮和输入框后方；上下渐变保留透明度，不以实色区域截断正文，首尾仍留有完整阅读的滚动空间。未显示键盘时输入框收成单行胶囊，显示键盘后展开工具区；切换保留草稿与选区，菜单不改变展开状态。流式回复期间发送按钮切换为停止，取消后的工具建议不能执行；用户向上阅读时不强制滚到末尾。
+- 聊天主界面顶部提供统一侧栏、独立临时聊天和菜单；强度通过输入框内轮盘选择。AI 主页面返回直接退出，课表右上角菜单不再重复提供 AI 入口；发送和停止共用居中的 ImageButton，强调色统一使用 PRIMARY；思考强度使用保持键盘的分档滑杆浮层，粉色填充跟随滑块，切换沿用 Motion 动效；加号菜单不夺取输入焦点或收起键盘。侧栏与底栏共用四项导航的描边 / 实心图标，未选中弱化，选中使用前景色；侧栏合并模块导航与项目聊天列表，底部左侧新聊天、右侧头像设置；项目菜单进入独立项目列表与新建页。临时聊天仅存内存，不读取已有项目记忆，不写入聊天历史；切回普通聊天或进程结束后清除。已移除应用内语音识别、麦克风按钮、设置入口及识别活动声明；不申请 RECORD_AUDIO。附件加号提供拍照、照片、文件与强度入口；手机信息与相机权限统一在设置 → 权限管理。菜单使用共享 MotionOverlay，左下方覆盖加号，去除空白底栏和 × 控件，原加号位置的重复触摸由覆盖面板处理；重复点击加号或收起键盘关闭；强度档位同步更新轮盘指针。图片直接上传 DeepSeek Files API，文件 ID 随多模态消息发送，上传在按发送时发生，失败可重试，远端文件 30 天自动过期。图片不再需要 OCR 插件；单图限 8 MB / 3200 万像素，文件读取限 10 MB；UTF-8 文本和 DOCX 提取正文（最多 64000 字），PDF 由系统渲染为图片（最多 4 页），每次最多 4 个手选附件或页面，独立于 2000 字输入框。聊天长按确认后可删除，保留项目记忆；最后一个聊天删除后补空聊天。所有主页面与二级页使用共享顶部边距，主页面大字号标题放到按钮下方；菜单不改变输入框行数。主题默认粉色，用户可在外观选择强调色，删除动作保留警示色。用户消息使用主题浅粉气泡，助手正文无背景框；标题按级别区分字号和粗细，正文、加粗与等宽代码分别呈现，流式与历史消息使用同一排版。对话滚动层铺满聊天页面，允许文字滚入顶部按钮和输入框后方；上下渐变保留透明度，不以实色区域截断正文，首尾仍留有完整阅读的滚动空间。考试详情与考试记录提供手动删除，确认时校验当前课表和完整记录快照，保存成功后刷新课表及小组件。具体周次按钮保持无阴影；任务分类采用字段内的下拉箭头。未显示键盘时输入框收成单行胶囊，显示键盘后展开工具区；切换保留草稿与选区，菜单不改变展开状态。流式回复期间发送按钮切换为停止，取消后的工具建议不能执行；用户向上阅读时不强制滚到末尾。
 
 - 普通对话使用流式文本，应用变更通过工具调用单独解析和确认；DeepSeek 强度分别对应关闭思考与 low/high/max，兼容协议仅在配置声明支持时传递 none/low/medium/high。聊天、项目和项目记忆保存在私有 `ai_chats` 偏好中，跨重启保留；每次请求使用最近32条消息及当前项目记忆，并由设备时钟即时提供日期、时间、星期、时区与偏移量。手机上下文另含机型、Android 版本、电量；日历与通知分别启用并取得系统授权后才在发送时读取，日历范围为昨天起未来 30 天 / 最多 100 条，通知仅当前最多 20 条且屏蔽验证码正文。独立 AI 通知监听器不复用或改变快递监听行为。MediaProjection 屏幕共享每次由系统授权，使用前台服务、持续通知和停止入口；只在内存保存最近外部画面，返回 Morrow 时暂停更新，发送问题时上传该快照并附捕获时间，停止共享清空帧，不自动重启或持久化投屏令牌。项目记忆可编辑、清空，模型可按用户授权自主追加、去重、替换和清空项目记忆，显示保存状态并提供一次撤销；写入前比较项目及记忆快照，临时聊天不保存长期记忆，凭据和验证码不得自动记忆。网络响应与工具参数仍在本机校验，不直接执行模型返回的文本。
 
 - 底部 AI 与课表、任务、快递并列；跨模块请求提供当前本机任务和快递快照。任务操作沿用 TaskPage 的串行保存、账号隔离与恢复历史；快递沿用 ParcelRepository 的校验、去重、恢复、通知和组件更新。目标变化时拒绝写入。平台任务只变更本机记录，不代表向学习通提交作业。缺少手机读取授权时直接请求系统日历、通知或屏幕共享权限，返回后继续原问题，不跳转 Morrow 权限页。手机操作经确认后使用原生 Intent 打开已安装应用、设置、拨号器、闹钟、计时器，或调整媒体音量；不直接拨出电话，闹钟与计时器保留系统确认界面，不支持任意第三方界面点击，不让模型接触密码或密钥。
 - API 配置支持最多 20 份供应商配置，包含可编辑的名称、HTTPS 基础地址、模型、协议、推理能力与密码遮罩下的原密钥，可新增、选择、编辑及确认删除。配置和密钥整体使用 Android Keystore + AES-GCM 加密并原子保存；首次从原 DeepSeek 密钥构造默认配置，持久化后保留其他配置，删除旧 DeepSeek 配置同时移除旧密钥。请求开始时固定所选配置，禁止跟随 HTTP 重定向，不向其他供应商转发已有远端文件 ID。DeepSeek 附件保留 Files API；兼容接口采用压缩图片 data URL，受现有聊天容量上限约束。参照 [DeepSeek Chat Completions](https://api-docs.deepseek.com/api/create-chat-completion/) 和 [OpenAI Chat Completions](https://developers.openai.com/api/reference/resources/chat)。
-- 共享独立主操作占满内容宽度，成组的保存、删除、取消、恢复等操作使用 `SecondaryUi.actionRow` 横排并保留 48dp 触控高度；API 编辑、项目记忆、插件下载、快递读取与提醒复用该布局。聊天侧栏进入设置须记录 AI 来源，返回时复用原聊天及草稿；不保留应用内语音识别入口。
+- 共享独立主操作占满内容宽度，成组的保存、删除、取消、恢复等操作使用 `SecondaryUi.actionRow` 横排并保留 48dp 触控高度；API 编辑、项目记忆、快递读取与提醒复用该布局。聊天侧栏进入设置须记录 AI 来源，返回时复用原聊天及草稿；不保留应用内语音识别入口。
 - 全局操作检查包括 `AiModulePlanTest`、`AiModulesIntegrationTest`、底部/侧栏导航测试；Windows 文件替换测试复用 `DataManagementTest.AtomicRename`。
 
 - 目前接入 DeepSeek Chat Completions，以用户自行提供的 API 密钥认证；密钥用 Android Keystore 加密保存在 `deepseek_key` 中，可在助手设置中删除，不进入备份、日志、课表或对话。发送时将当前课表、有效单次调整、当前课表的手动考试记录、任务与快递数据及最近对话发给 DeepSeek；界面需明确告知和提示费用。
@@ -54,7 +54,7 @@
 ### 界面与目录约定
 
 - 面向用户的名称统一为 **Morrow**，官网为 `https://morrow.xvyan.cn/`，仓库为 `fangfar/Morrow`；`cn.courselens` 包名、偏好键、签名、发布资产和工具参数保留兼容名称。
-- `app/` 维护原生 Java/View 界面；`ocr-engine/` 供 `ocr-plugin/` 使用；`web/` 为官网源码，`remote/` 为发布配置；业务检查在 `tests/`，Android 单元与仪器检查分别在 `app/src/test/`、`app/src/androidTest/`。生成目录与验收截图不提交。
+- `app/` 维护原生 Java/View 界面；`web/` 为官网源码，`remote/` 为发布配置；业务检查在 `tests/`，Android 单元与仪器检查分别在 `app/src/test/`、`app/src/androidTest/`。生成目录与验收截图不提交。
 - README 介绍功能、安装、隐私与反馈；官网展示实际产品及下载；开发约定集中在本文，更新记录使用 Releases。历史发布说明按对应版本保留，不将新源码能力写成已发布能力。
 - 系统无衬线字体，主页面标题 24sp、二级页标题 18sp、正文 14–16sp、元信息 12–13sp；用字重、对齐和间距分层，课程分组不再套装饰性胶囊。课表周网格、课程配色与底栏直接切换保留。
 - Android 色板以 `values/colors.xml` 与 `values-night/colors.xml` 为准，快递色值通过资源别名复用；官网同步墨色 `#171717`、次要文字 `#626870`、浅底 `#F3F4F5`、动作蓝 `#0866D9`。仅状态和操作使用强调色，课程颜色继续承担区分课程的功能。
@@ -74,7 +74,7 @@
 python tests/run_checks.py
 python tests/ReleaseChecksTest.py
 python tests/SigningChecks.py
-.\gradlew.bat --no-daemon -PqaBuild assembleDebug :app:assembleLiteDebugAndroidTest :ocr-plugin:assembleDebugAndroidTest :app:lintLiteDebug :ocr-plugin:lintDebug
+.\gradlew.bat --no-daemon -PqaBuild assembleDebug :app:assembleLiteDebugAndroidTest :app:lintLiteDebug
 ```
 
 Linux 使用 `python3` 和 `sh gradlew`。`run_checks.py` 是本地与 CI 共用的 Java 业务回归入口，另含本实验的学习通解析检查；Gradle 单元测试的 `NO-SOURCE` 不代表它们通过。
@@ -83,56 +83,24 @@ Linux 使用 `python3` 和 `sh gradlew`。`run_checks.py` 是本地与 CI 共用
 
 ## 快递中心
 
-### 主程序与识图插件
+### 单一主应用
 
-- 当前只维护原轻量版的主程序和独立 OCR 插件；保留 `lite` 构建名以兼容现有构建路径。主程序不包含 OCR 模型，识图时安装插件；包名、签名和数据格式保持不变。
-- 发布草稿仅生成主程序和 OCR 插件。远程配置保留历史字段，供旧客户端使用；新客户端使用 `android.liteApkUrl`。公开发布后再更新下载配置。
-
-### 可选图片识别插件
-
-- `ocr-plugin/` 是可选安装的独立应用，正式包名 `cn.courselens.ocr`，QA 为 `cn.courselens.ocr.qa`。与主包使用相同签名配置，但独立安装、卸载和版本管理。主包不依赖 ML Kit、不包含 OCR 模型或原生库；通知、粘贴文字和手动录入无需插件。插件不声明网络权限，不上传截图。
-- 「读取信息」和「识别设置」提供插件入口。主包从 `https://morrow.xvyan.cn/remote/ocr-plugin.json` 读取 HTTPS 下载地址、字节数、SHA-256、插件版本和协议。未发布时 `enabled: false`；不使用占位 APK 地址。下载交给系统 DownloadManager，界面显示进度、等待网络和失败重试，离开页面后可继续下载，再次进入恢复进度。下载后复制到私有目录，校验大小、SHA-256、包名、主包签名和协议 1，再临时授权系统安装器读取该 APK；取消下载会清除任务和安装缓存。QA 不下载正式插件，需安装同签名 QA 产物。
-- Android 首次安装需用户允许 Morrow 安装应用，并在系统安装器确认；不静默安装。安装返回后重新检查插件并继续选择 / 识别图片，取消或拒绝授权可重试。插件只接受同签名且包名匹配的主包调用，读取单个临时 `content` URI，返回有长度和坐标边界的文本行，由主包沿用 `ParcelRules.extractImage` 提取快递信息；不传整张位图或保存截图。
-- `.\gradlew.bat --no-daemon -PqaBuild assembleDebug :app:assembleLiteDebugAndroidTest :ocr-plugin:assembleDebugAndroidTest :app:testLiteDebugUnitTest :app:lintLiteDebug :ocr-plugin:lintDebug` 同时检查主包和插件。`python tests/OcrPluginChecks.py --host app/build/outputs/apk/lite/debug/app-lite-debug.apk --plugin ocr-plugin/build/outputs/apk/debug/ocr-plugin-debug.apk` 检查同签名、包名、模型隔离和插件无网络权限。正式发布工作流额外生成插件 APK 和 `ocr-plugin.json` 至草稿产物；公开插件后才把已验证的描述文件通过 PR 更新到 `remote/ocr-plugin.json`。下载地址可使用经审核的 HTTPS 国内对象存储，内容必须与校验值一致。准备产物不代表上传、公开发布或下载链路验收。
-- QA 下载测试可额外使用 `-PqaOcrManifest=http://127.0.0.1:8765/ocr-plugin.json`，通过 `adb -s SERIAL reverse tcp:8765 tcp:8765` 连接仅监听电脑回环地址的临时文件服务。描述文件必须指向 `cn.courselens.ocr.qa` 同签名插件；正式包拒绝 QA 插件及 HTTP 地址。只有 debug 网络配置放行精确 `127.0.0.1`，不放行局域网域名，也不部署 QA 下载配置到官网。安装 QA 主包和测试包后，可运行 `adb -s SERIAL shell am instrument -w -e ocrDownloadOnly true cn.courselens.qa.test/cn.courselens.NativeChecks` 启动下载专项；系统安装授权与确认仍需在手机界面完成，专项不打开业务页面或写入快递数据库。测试完删除 ADB 转发并停止服务，使用此测试包继续下载前需重新建立测试源。
-- 发布前验收：未安装入口、下载失败 / 取消 / 网络恢复、进后台 / 进程重建后恢复、损坏及异签名文件拒绝、拒绝安装权限、取消安装、安装成功后识别、卸载回退、图片分享、协议不兼容、深色 / 大字体。设备测试使用合成截图和隔离 QA 数据。
-
-
-- 入口在底部导航的「快递」，也可由 Android 文字 / 图片分享打开。三个底栏入口在主界面与快递页共用 `AppNavigation`，选中使用实心图标；返回课表 / 任务时复用主 Activity、保留原页面和相应选中项，并清除其上的快递页，避免返回键循环。独立 `ParcelActivity` 使用现有 `SecondaryUi`、原生 View 和半高滚动表单，头部菜单与添加按钮共用全应用 `SecondaryUi` 圆形图标样式，浅色沿用原色板，浅色与深色均复用共享色板。没有迁移课表、学习通缓存或账号数据，也没有改包名、版本号或正式签名。
-- 快递页使用单一快递列表，不按状态或驿站分类，不左右翻页。点击条目内容内联展开编辑、删除、复制取件码、提醒及已有物流记录，同一时间只展开一条；展开后的「已取件」按钮标记完成，完成后保留在同一列表末尾，地址与取件码使用灰色、取件码加删除线，不另显示完成状态文字；提供 5 秒撤销和展开后的「恢复未取件」，恢复不自动重启旧提醒；既有已取件记录同样可见。未核对的识别结果在同一列表提示核对，确认前不能标记完成。顶部保留淘宝 / 菜鸟 / 拼多多官方身份码入口；「手动添加」直接打开表单，「读取信息」提供粘贴文字、选择截图及直达通知读取设置。选择图片后关闭读取面板，离线识别不显示处理中弹窗，候选直接进入列表待核对；识别失败或无结果显示反馈，可重新选择图片或手动添加。旧版 OCR 插件仍可能显示处理中界面，安装同签名 1.0.1 或更新版本后才会消除。填写取件码或运单号即可保存，沿用原有状态字段及去重规则；不提供在线物流查询。全部数据删除仍在总设置 → 数据管理。
-
-- `ParcelDatabase` 是独立 Room schema 2 数据库 `parcels.db`，schema 保存在 `app/schemas/`。Java 使用 annotationProcessor，无 Compose / Hilt / Kotlin 插件；Room 2.6.1、WorkManager 2.9.1 保持现有 SDK 34 / JDK 17 构建兼容。升级 schema 时添加保留数据的 migration，不使用 destructive fallback。取件码和运单号分别保存；同运单或同地址同码去重，同码不同驿站保留。完成记录不因通知复活。运输中记录收到同运单取件通知时补全原记录，低评分信息需确认。单条删除移入本机快递恢复，并保留最长 14 天的 SHA-256 去重摘要；可从快递菜单或数据管理恢复，恢复不重启提醒，删除全部会清除记录、摘要和设置，并执行 Room 的 WAL checkpoint / VACUUM。
-- `ParcelRules` 是本地版本化规则（当前 v2），评分是规则强度而非统计概率。只提取明确取件语境，排除验证码和动态身份码。只有单码、明确地址的高评分通知可以直接进入待取件；其他结果在快递列表中标记为待核对，由用户人工核对，截图 / 分享一律确认。通知 / 粘贴多码文本不自动配地址或运单，避免串件；截图按 ML Kit 文本行坐标关联标签、码值和附近取件点，同一标签含多码时仍留空地址待补。截图局部区域排除身份码 / 验证码，不因整屏其他位置出现无关安全词而丢弃有效取件码。没有保存通知全文或图片，没有短信、无障碍、相机或媒体库读取权限。截图使用文档选择器 / 分享授权和独立可选插件内的中文 ML Kit；只接收 content URI，限 10 MB / 8000 万输入像素并下采样处理，识别后释放图片和识别器。
-- 通知识别默认关闭，需 App 内同意和系统通知访问两步授权；已授权时再次开启不重复跳转系统页面，返回后更新授权状态。开启后自动识别菜鸟、淘宝、拼多多、微信、QQ 及默认短信应用的**通知**，不需要选择来源；系统未返回默认短信应用时，已安装的 `com.android.mms` 可作为系统短信来源。不访问短信数据库。`ParcelNotificationListener` 由系统绑定权限保护，不扫描历史通知、不启动前台服务保活。关闭或清空数据会使排队中的旧识别结果失效。通知显示权限和读取通知访问相互独立。Android 15 及以上的敏感通知过滤、侧载应用受限设置、工作资料隔离和厂商限制都可能导致通知正文不可见；提供手动 / 分享入口，不绕过系统限制。
-- `ParcelIdentity` 只打开包限定的官方路由，捕获跳转失败后尝试打开应用首页，不弹提示。深链成功发出 Intent 不证明已到身份码页面。拼多多入口通过 `tab=ID_CODE&entry_source=11` 指定身份码页签，已在小米 14 / Android 16 的拼多多 8.3.0 验证；淘宝、菜鸟及其他版本仍需分别验收，不据此称为当前所有版本有效。页面不生成、读取、抓取或缓存官方动态令牌。
-- 在线物流查询与代理配置已移除。打开快递页时取消旧版 `parcel-tracking` 后台任务，并清除旧代理、后台查询开关与退避设置；旧版已排队的查询任务直接结束。保留已有物流字段，只供本机记录展示与旧数据兼容，不再发出物流查询请求。
-- 新识别和自定义未领取提醒共用独立通知频道，默认提醒关闭；Android 13 起只在用户开启提醒时请求 `POST_NOTIFICATIONS`。通知不包含码值和地址，按记录替换，识别去重避免重复推送；完成 / 删除取消通知。未领取提醒用 WorkManager 每 15 分钟检查。无精确闹钟 / 前台保活，不承诺准点；强行停止、Doze、重启和厂商省电均需实机检查。关闭开关取消对应周期任务。
-- `ParcelWidget` 独立于课表小组件，支持系统固定请求与手动添加。默认只显示待取数量；显示取件码与地址需在快递设置中主动开启。数据库修改后刷新，支持深色资源和 sp 字号。真实启动器添加、尺寸、大字体、点击与隐私开关需实机验收，不能以 `requestPinAppWidget` 返回值充当添加成功。
-
-### 参考来源与许可边界
-
-2026-10-25 重新核查了下列固定来源。取件识别采用可选插件内的 ML Kit 中文 OCR 与 `shareven/parcel` 的 MIT 取件标签、地址规则局部适配，未整体合并第三方应用。已在源码标注来源，并在 `app/src/main/assets/licenses/shareven-parcel.txt` 保留上游版权和许可全文；第三方许可不改变 Morrow 本身的许可状态。方案比较见 [取件识别调研](docs/parcel-recognition-research.md)。
-
-| 来源 | 核查文件与兼容性 | 使用方式 |
-| --- | --- | --- |
-| [shareven/parcel @ d7e4c97](https://github.com/shareven/parcel/tree/d7e4c974ffd1e4de2da9291df0d295856cd89818) | MIT；`util/SmsParser.kt`、`util/ThirdPartyEntry.kt`、`service/ParcelNotificationListenerService.kt`、`app/build.gradle.kts`；Kotlin / Compose，minSdk 29 / compileSdk 35 | 适配明确取件标签与地址前缀，保留 MIT 声明；不移植其短信权限、保活或完整 UI |
-| [pickup-code-app @ f5075d3](https://github.com/zixij644-elaborate/pickup-code-app/tree/f5075d3e4d2f4ffe4da259c699f472a790ec7013) | GPL-3.0；`extractor/CodeExtractor.kt`、`util/IdentityCodeLauncher.kt`、Gradle；Compose，minSdk 26 / compileSdk 35 | 仅参考确认流程、来源评分和包限定路由事实；未复制或翻译 GPL 实现 |
-| [ExpressOCR @ b1aad68](https://github.com/baso4/ExpressOCR/tree/b1aad68b51bf8dc4b2bdead655489a99691647c1) | MIT；`MainActivity.kt`、`CameraActivity.kt`、Gradle；CameraX / ML Kit，minSdk 26 / compileSdk 35 | 参考截图 → 本机 ML Kit 的流程；直接使用官方 SDK，自行处理大小限制和释放；不采用敏感日志、相机扫描 |
-| [KdAPI_Demo @ 603063c](https://github.com/APIGI/KdAPI_Demo/tree/603063c8a8e0a2acbf75f4de23def39f78982711) | 未找到 LICENSE；`2-Services/OrderService.cs`、README；.NET Core 3.1，不能直接作为 Android 库 | 仅核对服务端签名 / 查询职责，未移植代码、示例凭据或签名算法 |
-
-Android 实现依据：[Room Java 配置](https://developer.android.com/training/data-storage/room)、[ML Kit 中文识别](https://developers.google.com/ml-kit/vision/text-recognition/v2/android)、[NotificationListenerService](https://developer.android.com/reference/android/service/notification/NotificationListenerService)、[Android 13 通知权限](https://developer.android.com/develop/ui/views/notifications/notification-permission)、[Android 15 行为变化](https://developer.android.com/about/versions/15/behavior-changes-all)、[WorkManager](https://developer.android.com/develop/background-work/background-tasks/persistent/getting-started)。这些依赖有各自许可和条款，不代表 Morrow 采用相同项目许可。
+- 后续只构建和发布一个主应用 APK，不提供快递图片识别或 OCR 插件。内部保留 `lite` 构建名以兼容脚本路径，不代表对用户提供多个版本；公开文件统一命名 `Morrow-版本号.apk`。
+- 快递支持通知、粘贴文字、文字分享和手动录入；保留已有记录、撤销与恢复、提醒和桌面组件。删除图片分享入口、识图桥接与下载页面、OCR 引擎和插件 Gradle 模块；不再申请安装其他应用的权限。
+- AI 聊天拍照和照片附件继续由现有多模态链路处理，不依赖 OCR。为保持已授权 URI 兼容，FileProvider 保留原 authority，仅开放私有 `ai-capture` 缓存路径。
+- 既有版本和远程配置的历史字段保留兼容，不删除已发布资源；当前构建和发布流程不再生成、打包或发布插件。
 
 ### 快递测试
 
 ```powershell
 python tests/run_checks.py
-.\gradlew.bat --no-daemon -PqaBuild assembleDebug :app:assembleLiteDebugAndroidTest :ocr-plugin:assembleDebugAndroidTest :app:testLiteDebugUnitTest :app:lintLiteDebug :ocr-plugin:lintDebug
+.\gradlew.bat --no-daemon -PqaBuild assembleDebug :app:assembleLiteDebugAndroidTest :app:testLiteDebugUnitTest :app:lintLiteDebug
 adb -s SERIAL shell am instrument -w -e parcelOnly true cn.courselens.qa.test/cn.courselens.NativeChecks
 ```
 
-`ParcelRulesTest` 使用合成语料及 OCR 行坐标，覆盖标签别名、换行、多码、复制按钮干扰、同屏身份码和电话 / 日期排除；主包的 `parcelOcrOnly` 仪器专项验证插件结果协议与人工确认边界，不再调用识别模型。真实中文识别模型由独立 QA 插件专项验证：`adb -s SERIAL shell am instrument -w cn.courselens.ocr.qa.test/cn.courselens.ocr.OcrChecks`，只生成合成图片、不写快递数据库；该项不能代替主包下载 / 安装 / 回传的端到端验收。`ParcelAndroidTest` 用 Robolectric 模拟 Android 13 / 14 / 15，检查 Room 去重、运输中补全、删除/完成防复活、权限开关、旧查询任务取消与提醒保留。Android 16 需 JDK 21，可使用 `-PparcelTestSdks=33,34,35,36`；默认 JDK 17 不运行 API 36，不把未运行版本算通过。`ParcelChecks` 仪器专项使用唯一临时数据库，测试包名必须为 QA；设备安装和备份仍按「设备验证」执行。CI 运行 JVM / Robolectric 检查并保留报告，不运行设备测试。
+`ParcelRulesTest` 使用合成文字覆盖取件码别名、多码、身份码和电话 / 日期排除；`ParcelAndroidTest` 验证数据库和通知识别的去重、撤销、恢复、清空与授权隔离。仪器专项 `parcelOnly` 只用 QA 合成数据；真实通知和桌面小组件仍需设备验收。
 
-每个可用 Android 13 / 14 / 15 / 16 及以上的 QA 设备还需检查：首次拒绝/允许通知、频道关闭、通知访问授权/撤销与重新绑定、后台识别关闭后无写入；不同来源/重复通知/敏感通知过滤；分享 grant、过大图片、截图 OCR 和多码确认；深色及 2 倍字体；Doze / 重启 / 强行停止后的提醒延迟和提醒开关；真实启动器固定请求、尺寸、取件后刷新和隐藏码值。无设备时只能交付构建及模拟结果，不能宣称这些端到端检查通过。64 位 ML Kit 原生库的 16 KiB ELF / APK 对齐检查也不能代替 Android 15+ 16 KiB 页设备运行。
+每个可用 Android 13 / 14 / 15 / 16 及以上的 QA 设备还需检查：首次拒绝/允许通知、频道关闭、通知访问授权/撤销与重新绑定、后台识别关闭后无写入；不同来源/重复通知/敏感通知过滤；文字分享、多码确认；深色及 2 倍字体；Doze / 重启 / 强行停止后的提醒延迟和提醒开关；真实启动器固定请求、尺寸、取件后刷新和隐藏码值。无设备时只能交付构建及模拟结果，不能宣称这些端到端检查通过。64 位原生库的 16 KiB ELF / APK 对齐检查也不能代替 Android 15+ 16 KiB 页设备运行。
 
 ## 多份课表与学校适配
 
@@ -152,7 +120,7 @@ adb -s SERIAL install -r app/build/outputs/apk/androidTest/lite/debug/app-lite-d
 adb -s SERIAL shell am instrument -w -e saveOnly true cn.courselens.qa.test/cn.courselens.NativeChecks
 ```
 
-`SERIAL` 替换为已核验序列号，手机保持解锁和 App 前台。参数可换为 `chatMotionOnly`（合成聊天草稿、真实键盘升降、输入框连续高度、附件菜单与设置权限入口）、`tabStartupOnly`（冷进程下 54 份合成缓存作业的首次 / 后续底栏点击、首帧及主线程停顿）、`capsuleOnly`（冷启动恢复非零筛选、加载布局变化后的首次滑动、反向取消、点击动画及底栏无水波纹）、`chaoxingOnly`（学习通只读客户端、课程开关、删除恢复与刷新保留的合成检查）、`navigationOnly`（任务页导航、紧凑操作及普通 / 大字体布局）、`choiceOnly`（课程与调课选择器、取消和草稿保留）、`dialogLayoutOnly`（普通与大字体弹窗正文、按钮分区）、`courseSlotsOnly`、`scrollOnly`、`conflictOnly`、`adjustmentOnly`、`widgetOnly`、`widgetGuideOnly`、`widgetPinOnly`、`motionOnly`、`gestureOnly`、`performanceOnly` 或 `remoteOnly`；不指定专项参数运行全量入口。`nextClassOnly` 是历史名称，首页已无下一节提示。
+`SERIAL` 替换为已核验序列号，手机保持解锁和 App 前台。参数可换为 `manualExamOnly`（考试详情手动删除、取消、记录与课程保留）、`chatMotionOnly`（合成聊天草稿、真实键盘升降、输入框连续高度、附件菜单与设置权限入口）、`tabStartupOnly`（冷进程下 54 份合成缓存作业的首次 / 后续底栏点击、首帧及主线程停顿）、`capsuleOnly`（冷启动恢复非零筛选、加载布局变化后的首次滑动、反向取消、点击动画及底栏无水波纹）、`chaoxingOnly`（学习通只读客户端、课程开关、删除恢复与刷新保留的合成检查）、`navigationOnly`（任务页导航、紧凑操作及普通 / 大字体布局）、`choiceOnly`（课程与调课选择器、取消和草稿保留）、`dialogLayoutOnly`（普通与大字体弹窗正文、按钮分区）、`courseSlotsOnly`、`scrollOnly`、`conflictOnly`、`adjustmentOnly`、`widgetOnly`、`widgetGuideOnly`、`widgetPinOnly`、`motionOnly`、`gestureOnly`、`performanceOnly` 或 `remoteOnly`；不指定专项参数运行全量入口。`nextClassOnly` 是历史名称，首页已无下一节提示。
 
 `navigationOnly`、`choiceOnly`、`dialogLayoutOnly` 可追加 `-e normalFontOnly true`，只检查设备当前字号，不临时放大字体；未指定时仍覆盖普通与大字体。
 
@@ -208,7 +176,7 @@ COURSELENS_KEY_PASSWORD
 4. 发布成功且 APK 可下载后，再通过 PR 更新 `remote/config.json` 中的版本、更新日志和 APK 地址，保留公告及人工维护的网盘地址。CI 成功或草稿 Release 不等于发布成功。
 5. 核验 Pages 与 Raw 均返回 200，配置与 Git blob 一致；检查 APK 下载及旧客户端更新入口。网盘分享由维护者核对内容和有效期。
 
-本地正式构建按 `signing.properties.example` 配置被忽略的签名属性，密钥保存在仓库外；执行 `python tests/SigningChecks.py --signed`、正式 `assembleRelease :app:lintLiteRelease :ocr-plugin:lintRelease`。`python tests/ReleaseChecks.py vVERSION --apk PATH --edition lite`使用 `ANDROID_HOME` 或 `ANDROID_SDK_ROOT` 检查产物，输出到 `app/build/release/`，不发布。
+本地正式构建按 `signing.properties.example` 配置被忽略的签名属性，密钥保存在仓库外；执行 `python tests/SigningChecks.py --signed`、正式 `assembleRelease :app:lintLiteRelease`。`python tests/ReleaseChecks.py vVERSION --apk PATH`使用 `ANDROID_HOME` 或 `ANDROID_SDK_ROOT` 检查产物，输出到 `app/build/release/`，不发布。
 
 ## 公告配置与旧版兼容
 

@@ -33,7 +33,7 @@ final class SideNavigation extends FrameLayout {
   panel.setOnApplyWindowInsetsListener((view,insets)->{view.setPadding(ui.dp(16),insets.getSystemWindowInsetTop()+ui.dp(20),ui.dp(8),insets.getSystemWindowInsetBottom()+ui.dp(16));return insets;});
   TextView title=ui.text("Morrow",28,ink);title.setPadding(ui.dp(8),ui.dp(16),0,ui.dp(16));panel.addView(title);
   ScrollView scroll=new ScrollView(activity);panel.addView(scroll,new LinearLayout.LayoutParams(-1,0,1));items=new LinearLayout(activity);items.setOrientation(LinearLayout.VERTICAL);scroll.addView(items);
-  String[] names={"课表","任务","快递","AI 助手"},tags={"drawer-timetable","drawer-tasks","drawer-parcels","drawer-ai"};int[] icons={R.drawable.ic_calendar,R.drawable.ic_tasks,R.drawable.ic_parcel,R.drawable.ic_chat};
+  String[] names={"课表","任务","快递","AI 助手"},tags={"drawer-timetable","drawer-tasks","drawer-parcels","drawer-ai"};int[] icons={R.drawable.ic_calendar,R.drawable.ic_tasks,R.drawable.ic_parcel,R.drawable.ic_chat_outline};
   for(int i=0;i<names.length;i++){int index=i;destinations[i]=item(names[i],icons[i],tags[i],()->choose(()->navigate.accept(index)));items.addView(destinations[i],new LinearLayout.LayoutParams(-1,-2));}
   footer=new LinearLayout(activity);footer.setPadding(ui.dp(8),ui.dp(12),0,0);panel.addView(footer,new LinearLayout.LayoutParams(-1,-2));Button preferences=ui.iconAction(footer,R.drawable.ic_settings,"设置",()->choose(settings));preferences.setTag("drawer-settings");preferences.getCompoundDrawables()[0].setTint(ink);preferences.setBackground(ui.bg(surface,24));((LinearLayout.LayoutParams)preferences.getLayoutParams()).leftMargin=0;
   foreground=new FrameLayout(activity);foreground.setBackgroundColor(surface);foreground.setOutlineProvider(new ViewOutlineProvider(){@Override public void getOutline(View view,android.graphics.Outline outline){outline.setRoundRect(0,0,view.getWidth(),view.getHeight(),ui.dp(28)*progress);}});foreground.addView(content,new LayoutParams(-1,-1));addView(foreground,new LayoutParams(-1,-1));
@@ -53,7 +53,7 @@ final class SideNavigation extends FrameLayout {
   android.graphics.drawable.Drawable icon=activity.getDrawable(drawable).mutate();icon.setTint(ink);icon.setBounds(0,0,ui.dp(24),ui.dp(24));item.setCompoundDrawables(icon,null,null,null);item.setCompoundDrawablePadding(ui.dp(16));item.setOnClickListener(v->action.run());ui.focusOutline(item);return item;
  }
  void select(int selected){
-  for(int i=0;i<destinations.length;i++){boolean active=i==selected;destinations[i].setSelected(active);destinations[i].setTypeface(null,active?Typeface.BOLD:Typeface.NORMAL);destinations[i].setBackground(active?ui.bg(surface,16):null);}
+  for(int i=0;i<destinations.length;i++){boolean active=i==selected;destinations[i].setSelected(active);destinations[i].setTypeface(null,active?Typeface.BOLD:Typeface.NORMAL);destinations[i].setBackground(active?ui.bg(surface,16):null);android.graphics.drawable.Drawable icon=activity.getDrawable(AppNavigation.icon(i,active)).mutate();icon.setTint(active?ink:ui.MUTED);icon.setBounds(0,0,ui.dp(24),ui.dp(24));destinations[i].setCompoundDrawables(icon,null,null,null);}
  }
  boolean isOpen(){return panel.getVisibility()==VISIBLE;}
  boolean isRouting(){return routing;}
