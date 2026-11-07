@@ -3,6 +3,7 @@ package cn.courselens;
 import java.util.*;
 
 public final class CourseDisplay {
+ public static String prettyWeeks(Course c){StringBuilder out=new StringBuilder();for(int w=1;w<=30;w++){if(!c.active(w))continue;int first=w;while(w<30&&c.active(w+1))w++;if(out.length()>0)out.append("、");out.append(first);if(w>first)out.append("–").append(w);}return "第 "+out+" 周";}
  public static String key(int week,Course c){return week+":"+c.day+"|"+c.start+"|"+c.end+"|"+c.name+"|"+c.room+"|"+c.teacher+(c.details.isEmpty()&&c.className.isEmpty()?"":"|"+c.details+"|"+c.className);}
  private static String identity(Course c){return c.name+"|"+c.teacher+"|"+c.details+"|"+c.className;}
  private static long rank(String entry){try{String[] p=entry.split(":",3);return p.length==3&&p[0].equals("priority")?Math.max(0,Long.parseLong(p[1])):0;}catch(NumberFormatException e){return 0;}}

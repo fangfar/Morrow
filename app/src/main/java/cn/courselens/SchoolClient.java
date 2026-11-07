@@ -36,10 +36,10 @@ public class SchoolClient {
  }
  public java.util.function.Consumer<String> onDiagnostic=summary->{};
  private String lastUrl;
- private Response get(String url)throws Exception {byte[] b=request(url,"GET",null,null,0);return new Response(lastUrl,new String(b,StandardCharsets.UTF_8));}
+ Response fetchPage(String url)throws Exception {byte[] b=request(url,"GET",null,null,0);return new Response(lastUrl,new String(b,StandardCharsets.UTF_8));}
  private Response post(String url,String body,String type)throws Exception {byte[] b=request(url,"POST",body.getBytes(StandardCharsets.UTF_8),type,0);return new Response(lastUrl,new String(b,StandardCharsets.UTF_8));}
  public void prepare()throws Exception {
-  cachedCourses="";Response page=get(TABLE);Document doc=Jsoup.parse(page.text,page.url);Element form=doc.selectFirst("#upLoignForm");if(form==null){if(doc.selectFirst("#casLoginForm")!=null){casPage=page;captchaRequired=false;return;}cachedCourses=sync();return;}action=form.absUrl("action");key=new JSONObject(SchoolParser.scriptJson(page.text,"indexConfig")).getString("key");
+  cachedCourses="";Response page=fetchPage(TABLE);Document doc=Jsoup.parse(page.text,page.url);Element form=doc.selectFirst("#upLoignForm");if(form==null){if(doc.selectFirst("#casLoginForm")!=null){casPage=page;captchaRequired=false;return;}cachedCourses=sync();return;}action=form.absUrl("action");key=new JSONObject(SchoolParser.scriptJson(page.text,"indexConfig")).getString("key");
   hidden.clear();for(Element input:form.select("input[type=hidden][name]"))hidden.put(input.attr("name"),input.attr("value"));JSONObject diy=new JSONObject(SchoolParser.scriptJson(page.text,"diyConfig"));captchaRequired=!diy.getJSONObject("hide").optBoolean("captcha",true);
  }
  public byte[] captcha()throws Exception{return request(captchaUrl+(captchaUrl.contains("?")?"&":"?")+"ts="+System.currentTimeMillis(),"GET",null,null,0);}
@@ -59,22 +59,32 @@ public class SchoolClient {
  private String casLogin(String username,String password,String code)throws Exception {
   Document doc=Jsoup.parse(casPage.text,casPage.url);Element login=doc.selectFirst("#casLoginForm");if(login==null)throw new IOException("学校认证表单未找到。");String target=login.absUrl("action");if(target.isEmpty())target=casPage.url;
   captchaUrl=new URL(new URL(casPage.url),"captcha.html").toString();
-  String needs=get(new URL(new URL(casPage.url),"needCaptcha.html?username="+URLEncoder.encode(username,"UTF-8")).toString()).text.trim();captchaRequired=needs.equals("true");if(captchaRequired&&code.isEmpty())throw new AuthRequired("学校统一认证需要验证码，请输入下方图片中的字符，然后再次点击登录。");
+  String needs=fetchPage(new URL(new URL(casPage.url),"needCaptcha.html?username="+URLEncoder.encode(username,"UTF-8")).toString()).text.trim();captchaRequired=needs.equals("true");if(captchaRequired&&code.isEmpty())throw new AuthRequired("学校统一认证需要验证码，请输入下方图片中的字符，然后再次点击登录。");
   Map<String,String> fields=new LinkedHashMap<>();for(Element input:login.select("input[type=hidden][name]"))fields.put(input.attr("name"),input.attr("value"));fields.put("username",username);fields.put("password",password);fields.put("captchaResponse",code);
   Response response=post(target,form(fields),"application/x-www-form-urlencoded; charset=UTF-8");Document after=Jsoup.parse(response.text,response.url);if(after.selectFirst("#casLoginForm")!=null){casPage=response;Element error=after.selectFirst("#msg,.auth_error,.errors,#errorMsg,#formErrorTip,.error-msg");String message=error==null?"学校统一认证未成功，请检查密码或验证码。":error.text();throw new AuthRequired(message.isEmpty()?"学校统一认证未成功，请检查密码或验证码。":message);}
   casPage=null;captchaRequired=false;return sync();
  }
  public String sync()throws Exception {
-  Response page=get(TABLE);Document doc=Jsoup.parse(page.text,page.url);onDiagnostic.accept(describe(page));if(doc.selectFirst("#casLoginForm")!=null){casPage=page;throw new AuthNeeded();}String courses;
+  return syncPage(fetchPage(TABLE));
+ }
+ static boolean webPage(String url){if(!allowed(url))return false;String path=URI.create(url).getPath(),base=URI.create(TABLE).getPath();return path.equals(base)||path.startsWith(base+"/");}
+ String syncWebPage(String url,String html,String cookieHeader)throws Exception {
+  if(!webPage(url)||html==null||html.length()>1000000)throw new IOException("请先进入宿迁学院个人课表页。");
+  cookies.getCookieStore().removeAll();
+  if(cookieHeader!=null)for(String part:cookieHeader.split(";")){int equals=part.indexOf('=');if(equals<1)continue;HttpCookie cookie=new HttpCookie(part.substring(0,equals).trim(),part.substring(equals+1).trim());cookie.setVersion(0);cookie.setPath("/");cookie.setSecure(true);cookies.getCookieStore().add(URI.create(HOST),cookie);}
+  return syncPage(new Response(url,html));
+ }
+ private String syncPage(Response page)throws Exception {
+  Document doc=Jsoup.parse(page.text,page.url);onDiagnostic.accept(describe(page));if(doc.selectFirst("#casLoginForm")!=null){casPage=page;throw new AuthNeeded();}String courses;
   if(doc.selectFirst("#upLoignForm")!=null)throw new AuthRequired("学校登录会话已失效，请重新登录。");
   // Use the same print-data endpoint as the school’s native course-table script.
   Matcher id=Pattern.compile("/course-table/(?:info|index)/(\\d+)").matcher(page.url);String dataId=id.find()?id.group(1):"";
   String semester=value(doc,page.text,"semesterId"),biz=value(doc,page.text,"bizTypeId");if(semester.isEmpty()){Matcher current=Pattern.compile("(?s)(?:var|let|const)\\s+currentSemester\\s*=\\s*(\\{.*?\\})\\s*;").matcher(page.text);if(current.find())semester=""+new JSONObject(current.group(1)).getInt("id");}if(dataId.isEmpty())dataId=value(doc,page.text,"dataId");if(dataId.isEmpty())dataId=value(doc,page.text,"studentId");if(dataId.isEmpty()){Matcher student=Pattern.compile("[\"']?studentIds[\"']?\\s*[:=]\\s*\\[\\s*[\"']?(\\d+)").matcher(page.text);if(student.find())dataId=student.group(1);}
   if(!dataId.isEmpty()&&!semester.isEmpty()&&!biz.isEmpty()){
-   String summary=get(TABLE+"/get-data?bizTypeId="+biz+"&semesterId="+semester+"&dataId="+dataId).text;onDiagnostic.accept(describe(page)+"\nsummary="+shape(new JSONTokener(summary).nextValue(),0));JSONObject json=new JSONObject(summary);JSONArray ids=json.optJSONArray("lessonIds");if(ids!=null&&ids.length()>0){String schedule=get(TABLE+"/semester/"+semester+"/print-data?semesterId="+semester+"&hasExperiment=true").text;onDiagnostic.accept(describe(page)+"\nsummary="+shape(new JSONTokener(summary).nextValue(),0)+"\nschedule="+shape(new JSONTokener(schedule).nextValue(),0));courses=SchoolParser.jsonCourses(schedule,summary);courseNotes=SchoolParser.scheduleNotes(schedule);if(!courses.isEmpty())return courses;}
+   String summary=fetchPage(TABLE+"/get-data?bizTypeId="+biz+"&semesterId="+semester+"&dataId="+dataId).text;onDiagnostic.accept(describe(page)+"\nsummary="+shape(new JSONTokener(summary).nextValue(),0));JSONObject json=new JSONObject(summary);JSONArray ids=json.optJSONArray("lessonIds");if(ids!=null&&ids.length()>0){String schedule=fetchPage(TABLE+"/semester/"+semester+"/print-data?semesterId="+semester+"&hasExperiment=true").text;onDiagnostic.accept(describe(page)+"\nsummary="+shape(new JSONTokener(summary).nextValue(),0)+"\nschedule="+shape(new JSONTokener(schedule).nextValue(),0));courses=SchoolParser.jsonCourses(schedule,summary);courseNotes=SchoolParser.scheduleNotes(schedule);if(!courses.isEmpty())return courses;}
   }
   courses=SchoolParser.htmlCourses(page.text);if(!courses.isEmpty())return courses;
-  for(Element frame:doc.select("iframe[src]")){String url=frame.absUrl("src");if(allowed(url)){String content=get(url).text;courses=SchoolParser.htmlCourses(content);if(!courses.isEmpty())return courses;}}
+  for(Element frame:doc.select("iframe[src]")){String url=frame.absUrl("src");if(allowed(url)){String content=fetchPage(url).text;courses=SchoolParser.htmlCourses(content);if(!courses.isEmpty())return courses;}}
   throw new IOException("已连接学校，但课程数据格式尚未匹配。已保留原课表。请将此提示反馈给开发者。");
  }
  private static String shape(Object value,int depth)throws Exception {if(depth>6)return "…";if(value instanceof JSONObject){JSONObject o=(JSONObject)value;StringBuilder s=new StringBuilder("{");Iterator<String> keys=o.keys();while(keys.hasNext()){String key=keys.next();if(key.toLowerCase(Locale.ROOT).matches(".*(password|token|cookie|ticket|csrf|session).*") )continue;s.append(key).append(':').append(shape(o.get(key),depth+1)).append(',');}return s.append('}').toString();}if(value instanceof JSONArray){JSONArray a=(JSONArray)value;Set<String> variants=new LinkedHashSet<>();for(int i=0;i<a.length();i++)variants.add(shape(a.get(i),depth+1));return "[length="+a.length()+","+String.join(";",variants)+"]";}return value instanceof Number?"number":value instanceof Boolean?"boolean":"string";}
