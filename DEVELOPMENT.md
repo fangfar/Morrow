@@ -87,7 +87,7 @@ Linux 使用 `python3` 和 `sh gradlew`。`run_checks.py` 是本地与 CI 共用
 - 「读取信息」和「识别设置」提供插件入口。主包从 `https://morrow.xvyan.cn/remote/ocr-plugin.json` 读取 HTTPS 下载地址、字节数、SHA-256、插件版本和协议。未发布时 `enabled: false`；不使用占位 APK 地址。下载交给系统 DownloadManager，界面显示进度、等待网络和失败重试，离开页面后可继续下载，再次进入恢复进度。下载后复制到私有目录，校验大小、SHA-256、包名、主包签名和协议 1，再临时授权系统安装器读取该 APK；取消下载会清除任务和安装缓存。QA 不下载正式插件，需安装同签名 QA 产物。
 - Android 首次安装需用户允许 Morrow 安装应用，并在系统安装器确认；不静默安装。安装返回后重新检查插件并继续选择 / 识别图片，取消或拒绝授权可重试。插件只接受同签名且包名匹配的主包调用，读取单个临时 `content` URI，返回有长度和坐标边界的文本行，由主包沿用 `ParcelRules.extractImage` 提取快递信息；不传整张位图或保存截图。
 - `.\gradlew.bat --no-daemon -PqaBuild assembleDebug :app:assembleLiteDebugAndroidTest :ocr-plugin:assembleDebugAndroidTest :app:testLiteDebugUnitTest :app:lintLiteDebug :ocr-plugin:lintDebug` 同时检查主包和插件。`python tests/OcrPluginChecks.py --host app/build/outputs/apk/lite/debug/app-lite-debug.apk --plugin ocr-plugin/build/outputs/apk/debug/ocr-plugin-debug.apk` 检查同签名、包名、模型隔离和插件无网络权限。正式发布工作流额外生成插件 APK 和 `ocr-plugin.json` 至草稿产物；公开插件后才把已验证的描述文件通过 PR 更新到 `remote/ocr-plugin.json`。下载地址可使用经审核的 HTTPS 国内对象存储，内容必须与校验值一致。准备产物不代表上传、公开发布或下载链路验收。
-- QA 下载测试可额外使用 `-PqaOcrManifest=http://127.0.0.1:8765/ocr-plugin.json`，通过 `adb -s SERIAL reverse tcp:8765 tcp:8765` 连接仅监听电脑回环地址的临时文件服务。描述文件必须指向 `cn.courselens.ocr.qa` 同签名插件；正式包拒绝 QA 插件及 HTTP 地址。只有 debug 网络配置放行精确 `127.0.0.1`，不放行局域网域名，也不部署 QA 下载配置到官网。安装 QA 主包和测试包后，可运行 `adb -s SERIAL shell am instrument -w -e ocrDownloadOnly true cn.courselens.qa.test/cn.courselens.NativeChecks` 启动下载专项；系统安装授权与确认仍需在手机界面完成，专项不打开业务页面或写入快递数据库。测试完删除 ADB 转发并停止服务，使用此测试包继续下载前需重新建立测试源。
+- QA 下载测试可额外使用 `-PqaOcrManifest=http://127.0.0.1:8765/ocr-plugin.json`，通过 `adb -s SERIAL reverse tcp:8765 tcp:8765` 连接仅监听电脑回环地址的临时文件服务。描述文件必须指向 `cn.courselens.ocr.qa` 同签名插件；正式包拒绝 QA 插件及 HTTP 地址。网页导入允许 HTTP；插件下载仍通过客户端地址校验限制正式 / QA 来源，不部署 QA 下载配置到官网。安装 QA 主包和测试包后，可运行 `adb -s SERIAL shell am instrument -w -e ocrDownloadOnly true cn.courselens.qa.test/cn.courselens.NativeChecks` 启动下载专项；系统安装授权与确认仍需在手机界面完成，专项不打开业务页面或写入快递数据库。测试完删除 ADB 转发并停止服务，使用此测试包继续下载前需重新建立测试源。
 - 发布前验收：未安装入口、下载失败 / 取消 / 网络恢复、进后台 / 进程重建后恢复、损坏及异签名文件拒绝、拒绝安装权限、取消安装、安装成功后识别、卸载回退、图片分享、协议不兼容、深色 / 大字体。设备测试使用合成截图和隔离 QA 数据。
 
 
@@ -131,11 +131,11 @@ adb -s SERIAL shell am instrument -w -e parcelOnly true cn.courselens.qa.test/cn
 
 - 当前课表 ID 和名称列表放在 `timetables` SharedPreferences；原有课表继续使用 Activity 原偏好文件，不复制或改写已有课程格式。设置中的当前课表与切换列表支持长按名称改名，名称校验沿用 1–40 个字；只更新索引，不搬移课程数据。从设置进入新增页，取消或手动创建后返回设置；首页入口返回课表页。新增课表使用独立偏好文件，课程、学期、备注、冲突选择、调课与 `classTimes` 随课表切换。小组件读取同一当前 ID，旧课表的小组件点击不会误匹配新课表。学习通账号和作业仍使用原有独立存储。
 - `ClassTimes` 以每行 `HH:mm-HH:mm` 保存作息，1–30 节，检查顺序、重叠与课程节次上界。作息页按节次显示上课 / 下课时间，使用 24 小时选择器，支持新增一节与移除末节，并沿用保存 / 放弃草稿提示。未保存该字段的旧课表沿用宿迁学院 12 节作息。新增可手动创建或选择学校导入；徐州工程学院通过个人课表接口读取已选课程及各校区日节次，支持分段周次、单双周、单周调课与无时间实践备注。不同校区作息不一致时明确拒绝合并，保留旧课表。
-- 徐工院仅放行 `jwglxt.xzit.edu.cn` 的标准 HTTP/HTTPS 端口，禁止跨域或 URL 用户信息，密码使用学校 RSA/PKCS1 协议；登录成功后按课表使用 Android Keystore 加密保存账号密码，供静默刷新，不保存 Cookie。Android 网络配置只对该精确域名允许 HTTP，不包含子域，其余流量保持 HTTPS。该校当前 HTTP 服务不提供传输完整性和会话保密性，登录页及 README 明示限制；HTTPS 可用后应移除此例外。
+- 徐工院仅放行 `jwglxt.xzit.edu.cn` 的标准 HTTP/HTTPS 端口，禁止跨域或 URL 用户信息，密码使用学校 RSA/PKCS1 协议；登录成功后按课表使用 Android Keystore 加密保存账号密码，供静默刷新，不保存 Cookie。学校自动登录客户端仍限制精确域名；为兼容其他学校的网页导入，Android 网络配置允许 HTTP，其他模块继续执行各自的地址校验。该校当前 HTTP 服务不提供传输完整性和会话保密性，登录页及 README 明示限制；HTTPS 可用后应移除此例外。
 - 使用 `-e timetablesOnly true` 运行多课表与徐工院合成专项，涵盖旧数据保留、新建与切换、重建恢复、14 节编辑与小组件、RSA/解析及域名边界；测试只使用临时合成课表，结束恢复索引。真实账号读取只验证第三方链路，不把私人课表或凭据放入测试资产。
 - 学校课表同步位于课表下拉菜单的「同步课表」，课表管理页不显示刷新入口；`schoolImported` 随各课表保存，旧数据通过学校同步备注识别。每个课表绑定各自学校账号：登录成功后使用 Android Keystore 加密保存，刷新先复用当前会话，会话过期或进程重启后读取凭据静默登录；验证码、凭据失效或学校不匹配时进入登录页，账号可预填、密码不回填。清空当前课表时删除该课表保存的账号。仅刷新成功后覆盖课表；失败、无效数据或页面已切换时保留原课表。`timetablesOnly` 同时覆盖刷新入口、后台读取、成功保存、失败保留、静默登录、验证码回退和凭据存取。
 
-- 其他学校通过「网页导入」自行登录 HTTPS 教务网页，读取当前页及同源框架的文字表格，复用现有课表解析并支持含课程名称、星期、节次、周次列的明细表。结果必须预览并核对作息后保存；空结果、解析失败或返回时课表已改变均不覆盖数据。不支持图片、Canvas、PDF 及跨域框架。网页不注入原生桥、不读取密码、不放行证书错误、文件或外部应用跳转；每次打开清理网页会话，仅按课表保存站点根地址，不保存含令牌的完整 URL。网页课表再次同步需自行登录；已适配学校继续复用各课表的加密账号，学习通继续复用其独立加密凭据。
+- 其他学校通过「网页导入」自行登录 HTTP / HTTPS 教务网页，读取当前页及同源框架的文字表格，复用现有课表解析并支持含课程名称、星期、节次、周次列的明细表。结果必须预览并核对作息后保存；空结果、解析失败或返回时课表已改变均不覆盖数据。不支持图片、Canvas、PDF 及跨域框架。网页提供「上一页」与「关闭网页」操作，允许 HTTP 网页及其资源，界面提示 HTTP 连接不加密。网页不注入原生桥、不读取密码、不放行证书错误、文件或外部应用跳转；每次打开清理网页会话，仅按课表保存站点根地址，不保存含令牌的完整 URL。网页课表再次同步需自行登录；已适配学校继续复用各课表的加密账号，学习通继续复用其独立加密凭据。
 
 ## 设备验证
 
