@@ -294,10 +294,9 @@ final class TaskPage extends LinearLayout {
   EditText input=new EditText(getContext());input.setHint("选择课程或输入分类");input.setTextSize(16);input.setTextColor(ui.INK);input.setHintTextColor(ui.MUTED);input.setBackground(null);input.setPadding(ui.dp(16),ui.dp(12),0,ui.dp(12));input.setSingleLine(true);input.setMinHeight(ui.dp(SecondaryUi.CONTROL_HEIGHT));input.setContentDescription("课程 / 分类");field.addView(input,new LayoutParams(0,-2,1));
   ImageButton arrow=new ImageButton(getContext());arrow.setImageResource(R.drawable.ic_expand);arrow.setImageTintList(android.content.res.ColorStateList.valueOf(ui.MUTED));arrow.setBackground(null);arrow.setPadding(ui.dp(12),ui.dp(12),ui.dp(12),ui.dp(12));arrow.setScaleType(ImageView.ScaleType.CENTER);arrow.setContentDescription("选择课程分类");arrow.setTag("task-category-open");arrow.setFocusable(true);field.addView(arrow,new LayoutParams(ui.dp(48),ui.dp(48)));
   arrow.setOnClickListener(v->{
-   ((android.view.inputmethod.InputMethodManager)activity.getSystemService(Context.INPUT_METHOD_SERVICE)).hideSoftInputFromWindow(input.getWindowToken(),0);
-   MainActivity.NavigationOverlay picker=activity.new NavigationOverlay(false,"选择课程 / 分类");picker.body.setTag("task-category-selection");
+   MainActivity.NavigationOverlay picker=activity.new NavigationOverlay(true,"选择课程 / 分类",arrow);picker.menuWidth=264;picker.body.setTag("task-category-selection");picker.returnFocus=input;input.requestFocus();
    Set<String> names=new LinkedHashSet<>();if(snapshot!=null)for(ChaoxingClient.Subject course:snapshot.courses)names.add(course.name);for(ChaoxingClient.Work work:allTasks())if(!work.course.isEmpty())names.add(work.course);names.add("手动任务");
-   for(String name:names){TextView option=ui.popupItem(picker.body,name,()->{input.setText(name);input.setSelection(input.length());picker.close(true);});ui.popupChecked(option,name.equals(input.getText().toString()));}
+   for(String name:names){TextView option=ui.popupItem(picker.body,name,()->{input.setText(name);input.setSelection(input.length());picker.close(true);});ui.popupChecked(option,name.equals(input.getText().toString()));option.setTextSize(17);android.graphics.drawable.Drawable mark=option.getCompoundDrawables()[0];option.setCompoundDrawables(null,null,mark,null);}
   });return input;
  }
 
