@@ -11,6 +11,11 @@ import static org.junit.Assert.*;
 @RunWith(RobolectricTestRunner.class)
 @Config(sdk=33)
 public class WebTimetableLayoutTest {
+ @Test public void openingClosingAndReopeningKeepsBrowserCookies(){
+  android.webkit.CookieManager cookies=android.webkit.CookieManager.getInstance();cookies.setCookie("https://school.example/","session=synthetic; Path=/; Max-Age=86400");
+  try(var controller=Robolectric.buildActivity(WebTimetableActivity.class).setup()){assertTrue(cookies.getCookie("https://school.example/").contains("session=synthetic"));controller.pause();}
+  try(var controller=Robolectric.buildActivity(WebTimetableActivity.class).setup()){assertTrue(cookies.getCookie("https://school.example/").contains("session=synthetic"));}
+ }
  @Test public void compactControlsLeaveRoomForFullWidthZoomablePage(){
   try(var controller=Robolectric.buildActivity(WebTimetableActivity.class).setup()){
    WebTimetableActivity activity=controller.get();ViewGroup content=activity.findViewById(android.R.id.content);View body=content.getChildAt(0);WebView web=body.findViewWithTag("web-timetable-content");

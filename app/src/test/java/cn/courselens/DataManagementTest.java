@@ -85,6 +85,14 @@ public class DataManagementTest {
    MainActivity activity=controller.get();setField(activity,"data","1|1|2|合成课程|A101|1");callInstanceMethod(activity,"menu");((View)getField(activity,"root")).findViewWithTag("data-management").performClick();View data=getField(activity,"root");data.findViewWithTag("clear-timetable").performClick();org.robolectric.shadows.ShadowAlertDialog.getLatestAlertDialog().getButton(AlertDialog.BUTTON_POSITIVE).performClick();shadowOf(Looper.getMainLooper()).idle();assertSame(data,getField(activity,"root"));assertEquals("",getField(activity,"data"));
   }
  }
+ @Test public void browserDataIsClearedOnlyAfterConfirmationAndKeepsAccountsAndTimetable(){
+  android.webkit.CookieManager cookies=android.webkit.CookieManager.getInstance();cookies.setCookie("https://school.example/","session=synthetic; Path=/; Max-Age=86400");
+  try(ActivityController<MainActivity> controller=Robolectric.buildActivity(MainActivity.class).setup()){
+   MainActivity activity=controller.get();activity.getPreferences(0).edit().putString("courses","1|1|2|合成课程|A101|1").commit();activity.getSharedPreferences("school_accounts",0).edit().putString("test-marker","school").commit();activity.getSharedPreferences("chaoxing_account",0).edit().putString("test-marker","chaoxing").commit();
+   callInstanceMethod(activity,"menu");((View)getField(activity,"root")).findViewWithTag("data-management").performClick();View data=getField(activity,"root");assertNotNull(data.findViewWithTag("clear-web-data"));data.findViewWithTag("clear-web-data").performClick();org.robolectric.shadows.ShadowAlertDialog.getLatestAlertDialog().getButton(AlertDialog.BUTTON_NEGATIVE).performClick();assertTrue(cookies.getCookie("https://school.example/").contains("session=synthetic"));
+   data.findViewWithTag("clear-web-data").performClick();org.robolectric.shadows.ShadowAlertDialog.getLatestAlertDialog().getButton(AlertDialog.BUTTON_POSITIVE).performClick();shadowOf(Looper.getMainLooper()).idle();assertNull(cookies.getCookie("https://school.example/"));assertSame(data,getField(activity,"root"));assertEquals("1|1|2|合成课程|A101|1",activity.getPreferences(0).getString("courses",""));assertEquals("school",activity.getSharedPreferences("school_accounts",0).getString("test-marker",""));assertEquals("chaoxing",activity.getSharedPreferences("chaoxing_account",0).getString("test-marker",""));
+  }
+ }
  @Test public void clearingTasksRemovesAllAccountCachesAndCredentialsOnlyAfterConfirmation()throws Exception {
   try(ActivityController<MainActivity> controller=Robolectric.buildActivity(MainActivity.class).setup()){
    MainActivity activity=controller.get();ChaoxingClient.Result fixture=new ChaoxingClient.Result();fixture.items.add(new ChaoxingClient.Work("合成课程","合成任务","未交",""));fixture.deleted.add(new ChaoxingClient.Work("合成课程","合成历史","未交",""));

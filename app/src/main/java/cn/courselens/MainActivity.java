@@ -413,11 +413,18 @@ public class MainActivity extends Activity {
   LinearLayout body=secondary("数据管理","",this::menu);
   LinearLayout timetableData=settingsGroup(body,"课表");option(timetableData,R.drawable.ic_notes,"清空本课表考试记录","删除手动保存的考试记录",this::clearAiExams).setTag("clear-ai-exams");
   option(timetableData,R.drawable.ic_calendar,"清空当前课表","清空课程、备注和单次调整，退出学校账号",()->confirmClear()).setTag("clear-timetable");
+  LinearLayout browser=settingsGroup(body,"网页导入");option(browser,R.drawable.ic_notes,"清理网页数据","清除所有网页导入站点的登录状态、网站存储和缓存",this::clearWebData).setTag("clear-web-data");
   LinearLayout tasks=settingsGroup(body,"任务");
   option(tasks,R.drawable.ic_tasks,"任务恢复","恢复已删除或本机标记完成的任务",()->{prepareTasks();taskPage.history();}).setTag("task-deletion-history");
   option(tasks,R.drawable.ic_tasks,"删除全部任务数据","删除手动任务、所有学习通缓存和删除历史，退出学习通账号",()->{prepareTasks();taskPage.clearData();}).setTag("clear-tasks");
   LinearLayout parcels=settingsGroup(body,"快递");option(parcels,R.drawable.ic_parcel,"快递恢复","",()->{prepareParcels();parcelPage.history();}).setTag("parcel-deletion-history");
   option(parcels,R.drawable.ic_parcel,"删除全部快递数据","删除记录和设置，关闭通知识别与提醒",()->{prepareParcels();parcelPage.clearData();}).setTag("clear-parcels");
+ }
+ private void clearWebData(){
+  AlertDialog dialog=new AlertDialog.Builder(this,R.style.SecondaryDialog).setTitle("清理网页数据？").setMessage("将清除所有网页导入站点的登录状态、网站存储和缓存，下次使用需要重新登录。已导入的课表、单独保存的学校账号和学习通账号会保留。").setNegativeButton("取消",null).setPositiveButton("清理",null).create();dialog.show();styleDialog(dialog,true);
+  dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(v->{dialog.getButton(AlertDialog.BUTTON_POSITIVE).setEnabled(false);dialog.getButton(AlertDialog.BUTTON_NEGATIVE).setEnabled(false);dialog.setCancelable(false);
+   try{android.webkit.WebStorage.getInstance().deleteAllData();android.webkit.WebViewDatabase.getInstance(this).clearHttpAuthUsernamePassword();android.webkit.WebView browser=new android.webkit.WebView(this);try{browser.clearCache(true);browser.clearFormData();}finally{browser.destroy();}android.webkit.CookieManager.getInstance().removeAllCookies(removed->{android.webkit.CookieManager.getInstance().flush();if(!isDestroyed()){dialog.dismiss();toast("网页数据已清理，下次使用需要重新登录。");}});}catch(Exception e){dialog.getButton(AlertDialog.BUTTON_POSITIVE).setEnabled(true);dialog.getButton(AlertDialog.BUTTON_NEGATIVE).setEnabled(true);dialog.setCancelable(true);toast("网页数据未能全部清理，请重试。");}
+  });
  }
  private void timetableSettings(){
   if(navigationOverlay!=null)navigationOverlay.close(false);if(pageBack!=null)home();
