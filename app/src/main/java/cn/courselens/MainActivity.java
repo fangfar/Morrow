@@ -433,7 +433,7 @@ public class MainActivity extends Activity {
  private void timetableSettings(){
   if(navigationOverlay!=null)navigationOverlay.close(false);if(pageBack!=null)home();
   View anchor=root.findViewWithTag("timetable-settings");NavigationOverlay menu=new NavigationOverlay(true,"课表设置",anchor);
-  TextView current=text("",14,INK);current.setText(timetableCaption(Timetables.active(this)));current.setTypeface(null,Typeface.NORMAL);current.setPadding(dp(16),dp(8),dp(16),dp(8));current.setMinHeight(dp(48));current.setTag("timetable-source-summary");current.setContentDescription("当前课表，"+Timetables.names(this).get(Timetables.active(this))+"，"+Timetables.sourceLabel(this,Timetables.active(this)));menu.body.addView(current);secondaryUi.popupDivider(menu.body);
+  TextView current=text("",14,INK);current.setText(timetableCaption(Timetables.active(this)));current.setGravity(Gravity.CENTER);current.setTypeface(null,Typeface.NORMAL);current.setPadding(dp(16),dp(8),dp(16),dp(8));current.setMinHeight(dp(48));current.setTag("timetable-source-summary");current.setContentDescription("当前课表，"+Timetables.names(this).get(Timetables.active(this))+"，"+Timetables.sourceLabel(this,Timetables.active(this)));menu.body.addView(current);secondaryUi.popupDivider(menu.body);
   menuItem(menu,"切换课表","timetable-switch",this::timetablePicker).setEnabled(!busy);
   menuItem(menu,"添加课程","timetable-add-course",()->courseForm(null,-1,this::home));
   menuItem(menu,"课程调整恢复","adjustment-manager",this::adjustmentManager);
