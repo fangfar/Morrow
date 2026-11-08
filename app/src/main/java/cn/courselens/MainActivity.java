@@ -40,7 +40,7 @@ public class MainActivity extends Activity {
  private final PageMotion pageMotion=new PageMotion();private Object systemBack;private boolean backRegistered;
  private ViewPager pager;private TextView weekLabel;private FrameLayout daysBar; private LinearLayout root;private FrameLayout stage;private boolean returningPage,skipPageMotion;private int week=6;private String data="",notes="",term="2026-08-31";
  private SchoolClient school=new SchoolClient();private final ExecutorService worker=Executors.newSingleThreadExecutor();private boolean busy=false,showingDetail=false;private int screen=0;private Runnable pageBack;private CourseChoiceSheet choiceSheet;private NavigationOverlay navigationOverlay,exitingOverlay;
- private EditText account,password,captcha;private TextView loginStatus;private ProgressBar loginProgress;private Button loginButton;private LinearLayout captchaBox;private ImageView captchaImage;private SchoolAccount schoolAccount;private String loginAccountPrefill;
+ private EditText account,password,captcha;private TextView loginStatus;private ProgressBar loginProgress;private Button loginButton;private LinearLayout captchaBox;private ImageView captchaImage;private SchoolAccount schoolAccount;private WebTimetableSync webTimetableSync;private String loginAccountPrefill;
  private int dp(float n){return Math.round(n*getResources().getDisplayMetrics().density);}
  private void applyPalette(){secondaryUi=new SecondaryUi(this);INK=secondaryUi.INK;MUTED=secondaryUi.MUTED;BLUE=secondaryUi.BLUE;PRIMARY=secondaryUi.PRIMARY;SURFACE=secondaryUi.SURFACE;AQUA=secondaryUi.AQUA;SOFT=secondaryUi.SOFT;NAVY=secondaryUi.NAVY;CARD=secondaryUi.CARD;DIVIDER=secondaryUi.DIVIDER;DANGER=secondaryUi.DANGER;DISABLED=secondaryUi.DISABLED;ON_PRIMARY=secondaryUi.ON_PRIMARY;HANDLE=secondaryUi.HANDLE;COURSE_BORDER=secondaryUi.COURSE_BORDER;NAV_MUTED=secondaryUi.NAV_MUTED;WARNING=secondaryUi.WARNING;dark=secondaryUi.dark;}
  @Override protected void attachBaseContext(Context base){super.attachBaseContext(Appearance.wrap(base));}
@@ -671,7 +671,7 @@ public class MainActivity extends Activity {
  private void showAnnouncement(RemoteConfig.Announcement item){AlertDialog dialog=remoteDialog(item.title,item.body,item.publishedAt.isEmpty()?"":item.publishedAt.replace('T',' ').replace("Z"," UTC"),R.drawable.ic_notes);dialog.setButton(AlertDialog.BUTTON_POSITIVE,"我知道了",(d,w)->remote.read(item.id));finishRemoteDialog(dialog);}
  private void showUpdate(RemoteConfig config){remote.sessionShown.add("update:"+config.versionCode);AlertDialog dialog=remoteDialog(config.promptTitle.isEmpty()?"发现新版本 "+config.versionName:config.promptTitle,config.promptMessage.isEmpty()?(config.changelog.isEmpty()?"新版 Morrow 已发布，可前往下载。":config.changelog):config.promptMessage,"",R.drawable.ic_sync);dialog.setButton(AlertDialog.BUTTON_NEGATIVE,"取消",(d,w)->{});dialog.setButton(AlertDialog.BUTTON_POSITIVE,"立即更新",(d,w)->openRemoteLink(config.downloadUrl(false)));finishRemoteDialog(dialog);}
 
- private AlertDialog confirmClear(){Runnable destination="数据管理".equals(root.getTag())?()->{}:this::home;if(busy){toast("请等待同步结束");return null;}AlertDialog dialog=new AlertDialog.Builder(this,R.style.SecondaryDialog).setTitle("清空当前课表？").setMessage("当前课表的课程、备注和单次调整会被清空。需要再次导入或手动添加课程。").setNegativeButton("保留课表",null).setPositiveButton("清空",(d,w)->{if(busy){toast("请等待同步结束");return;}school.logout();boolean cleared=true;try{schoolAccount.remove(Timetables.active(this));}catch(Exception e){cleared=false;}loginAccountPrefill=null;data="";notes="";adjustments="";getPreferences(0).edit().remove("courseAdjustments").remove("schoolImported").apply();displayChoices.clear();getPreferences(0).edit().remove("displayChoices").apply();save();destination.run();toast(cleared?"已退出并清空当前课表。":"课表已清空，但已保存的学校账号未能删除。");}).create();dialog.show();styleDialog(dialog,true);return dialog;}
+ private AlertDialog confirmClear(){Runnable destination="数据管理".equals(root.getTag())?()->{}:this::home;if(busy){toast("请等待同步结束");return null;}AlertDialog dialog=new AlertDialog.Builder(this,R.style.SecondaryDialog).setTitle("清空当前课表？").setMessage("当前课表的课程、备注和单次调整会被清空。需要再次导入或手动添加课程。").setNegativeButton("保留课表",null).setPositiveButton("清空",(d,w)->{if(busy){toast("请等待同步结束");return;}school.logout();boolean cleared=true;try{schoolAccount.remove(Timetables.active(this));}catch(Exception e){cleared=false;}loginAccountPrefill=null;data="";notes="";adjustments="";getPreferences(0).edit().remove("courseAdjustments").remove("schoolImported").remove(TimetableSync.BASELINE).remove(TimetableSync.PROTECTED).remove("syncClassTimes").remove("syncSource").apply();displayChoices.clear();getPreferences(0).edit().remove("displayChoices").apply();save();destination.run();toast(cleared?"已退出并清空当前课表。":"课表已清空，但已保存的学校账号未能删除。");}).create();dialog.show();styleDialog(dialog,true);return dialog;}
  private void termPicker(){
   LinearLayout body=secondary("开学日期","选择第 1 周的开始日期。",this::menu);LinearLayout card=new LinearLayout(this);card.setOrientation(LinearLayout.VERTICAL);card.setGravity(Gravity.CENTER_HORIZONTAL);card.setBackground(bg(CARD,20));card.setPadding(0,dp(20),0,dp(16));body.addView(card,new LinearLayout.LayoutParams(-1,-2));
   TextView label=text("第一周开始于",13,MUTED);label.setPadding(dp(16),0,dp(16),0);card.addView(label);TextView selected=text("",22,INK);selected.setTag("term-date-summary");selected.setGravity(Gravity.CENTER);selected.setPadding(0,dp(8),0,dp(16));card.addView(selected,new LinearLayout.LayoutParams(-1,-2));
@@ -965,7 +965,7 @@ public class MainActivity extends Activity {
  }
  private void acceptImport(String value,SchoolClient client,String source){acceptImport(value,client,source,"");}
  private void acceptImport(String value,SchoolClient client,String source,String suffix){
-  client.classTimes.validate(Course.parse(value));setTimes(client.classTimes);schoolId=source;data=value;notes="已从学校同步 · "+Course.parse(value).size()+" 条课程\n"+client.courseNotes;getPreferences(0).edit().putBoolean("schoolImported",true).apply();week=currentWeek();homePage=null;save();if(password!=null)password.getText().clear();home();toast("课表同步成功"+suffix);
+  client.classTimes.validate(Course.parse(value));if(source.equals(schoolId)&&getPreferences(0).getBoolean("schoolImported",false)){try{applyTimetableSync(value,client.classTimes,source);if(password!=null)password.getText().clear();if(primaryTab()!=0)home();}catch(Exception e){toast("同步失败，原课表已保留。\n"+e.getMessage());}return;}getPreferences(0).edit().putString(TimetableSync.BASELINE,value).putString("syncClassTimes",client.classTimes.encode()).putString("syncSource",source).remove(TimetableSync.PROTECTED).apply();setTimes(client.classTimes);schoolId=source;data=value;notes="已从学校同步 · "+Course.parse(value).size()+" 条课程\n"+client.courseNotes;getPreferences(0).edit().putBoolean("schoolImported",true).apply();week=currentWeek();homePage=null;save();if(password!=null)password.getText().clear();home();toast("课表同步成功"+suffix);
  }
  private void openWebTimetable(){
   if(busy){toast("请等待同步结束");return;}startActivityForResult(new Intent(this,WebTimetableActivity.class).putExtra("timetable",Timetables.active(this)).putExtra("baseline",data).putExtra("times",classTimes.encode()).putExtra("url",getPreferences(0).getString("webTimetableUrl","")),920);
@@ -973,37 +973,62 @@ public class MainActivity extends Activity {
  private void acceptWebTimetable(Intent result){
   if(!Timetables.active(this).equals(result.getStringExtra("timetable"))||!data.equals(result.getStringExtra("baseline"))){toast("课表已切换或修改，请重新导入");return;}
   try{String value=result.getStringExtra("courses");List<Course> courses=Course.parse(value);if(courses.isEmpty())throw new IllegalArgumentException("未识别到课程");ClassTimes times=ClassTimes.parse(result.getStringExtra("times"));times.validate(courses);String url=result.getStringExtra("url");if(!WebTimetableActivity.allowed(url))throw new IllegalArgumentException("网页地址无效");
-   if(!getPreferences(0).edit().putString("courses",value).putString("classTimes",times.encode()).putString("school","web").putBoolean("schoolImported",true).putString("webTimetableUrl",url).putString("notes","已从网页导入 · "+courses.size()+" 条课程").commit())throw new IllegalStateException("本机保存失败");
-   try{schoolAccount.remove(Timetables.active(this));}catch(Exception e){toast("旧学校账号未能删除，请在账号管理中重新配置");}reloadTimetable();toast("网页课表已导入");
+   String syncUrl=result.getStringExtra("syncUrl");if(syncUrl==null)syncUrl=url;
+   if(schoolId.equals("web")&&getPreferences(0).getBoolean("schoolImported",false)){schoolAccount.saveWebSource(Timetables.active(this),syncUrl);applyTimetableSync(value,times,"web");return;}
+   if(!getPreferences(0).edit().putString("courses",value).putString("classTimes",times.encode()).putString("school","web").putString(TimetableSync.BASELINE,value).putString("syncSource","web").putString("syncClassTimes",times.encode()).remove(TimetableSync.PROTECTED).putBoolean("schoolImported",true).putString("webTimetableUrl",url).putString("notes","已从网页导入 · "+courses.size()+" 条课程").commit())throw new IllegalStateException("本机保存失败");
+   try{schoolAccount.remove(Timetables.active(this));}catch(Exception e){toast("旧学校账号未能删除，请在账号管理中重新配置");}try{schoolAccount.saveWebSource(Timetables.active(this),syncUrl);}catch(Exception e){toast("课表已导入，但同步来源未能加密保存，请重新导入后同步。");}reloadTimetable();toast("网页课表已导入");
   }catch(Exception e){toast("导入失败："+e.getMessage());}
  }
  private void refreshTimetable(){
-  if(busy){toast("同步正在进行中");return;}if(schoolId.equals("web")){openWebTimetable();return;}if(!loginSchool.equals(schoolId)){loginSchool=schoolId;school=schoolClient(schoolId);}SchoolClient client=school;String source=schoolId,id=Timetables.active(this),baseline=data,oldTimes=classTimes.encode(),oldTerm=term,oldAdjustments=adjustments;int token=screen;
+  if(busy){toast("同步正在进行中");return;}if(schoolId.equals("web")){refreshWebTimetable();return;}if(!loginSchool.equals(schoolId)){loginSchool=schoolId;school=schoolClient(schoolId);}SchoolClient client=school;String source=schoolId,id=Timetables.active(this),baseline=data,oldTimes=classTimes.encode(),oldTerm=term,oldAdjustments=adjustments;int token=screen;
   busy=true;updateSystemBack();View refresh=root.findViewWithTag("refresh-timetable");if(refresh!=null){refresh.setEnabled(false);refresh.setContentDescription("正在刷新课表");}toast("正在刷新课表…");
   worker.execute(()->{
-   String prefill="";
    try{
     try{client.prepare();}catch(SchoolClient.AuthRequired ignored){}
     String next=client.cachedCourses;
     if(next.isEmpty()){
      SchoolAccount.Saved saved;
-     try{saved=schoolAccount.load(id);}catch(Exception e){String message=e.getMessage()==null?"保存的学校账号无法读取，请重新登录后刷新。":e.getMessage();runOnUiThread(()->{finishTimetableRefresh();if(isDestroyed()||screen!=token||!id.equals(Timetables.active(this)))return;toast(message);login();});return;}
-     if(saved==null||!source.equals(saved.school)){runOnUiThread(()->{finishTimetableRefresh();if(isDestroyed()||screen!=token||!id.equals(Timetables.active(this)))return;toast("请重新登录学校账号以刷新课表");login();});return;}
-     prefill=saved.account;
+     try{saved=schoolAccount.load(id);}catch(Exception e){String message=e.getMessage()==null?"保存的学校账号无法读取，请重新登录后刷新。":e.getMessage();runOnUiThread(()->{finishTimetableRefresh();if(isDestroyed()||screen!=token||!id.equals(Timetables.active(this)))return;toast(message);});return;}
+     if(saved==null||!source.equals(saved.school)){runOnUiThread(()->{finishTimetableRefresh();if(isDestroyed()||screen!=token||!id.equals(Timetables.active(this)))return;toast("请在学校账号中重新登录后同步课表");});return;}
      if(client.captchaRequired)throw new SchoolClient.AuthRequired("学校要求验证码，请登录后刷新课表。");
      next=client.login(saved.account,saved.password,"");
     }
     if(next.isEmpty())throw new IllegalArgumentException("学校未返回课程，已保留原课表。");
     List<Course> courses=Course.parse(next);if(courses.isEmpty())throw new IllegalArgumentException("学校未返回课程，已保留原课表。");client.classTimes.validate(courses);
     String ready=next;
-    runOnUiThread(()->{finishTimetableRefresh();if(isDestroyed()||screen!=token||!id.equals(Timetables.active(this)))return;if(!data.equals(baseline)||!term.equals(oldTerm)||!classTimes.encode().equals(oldTimes)||!adjustments.equals(oldAdjustments)){toast("课表已修改，请重新刷新");return;}acceptImport(ready,client,source);});
+    runOnUiThread(()->{finishTimetableRefresh();if(isDestroyed()||screen!=token||!id.equals(Timetables.active(this)))return;if(!data.equals(baseline)||!term.equals(oldTerm)||!classTimes.encode().equals(oldTimes)||!adjustments.equals(oldAdjustments)){toast("课表已修改，请重新刷新");return;}try{applyTimetableSync(ready,client.classTimes,source);}catch(Exception e){toast("同步失败，原课表已保留。\n"+e.getMessage());}});
    }catch(SchoolClient.AuthRequired e){
-    String account=prefill;
-    runOnUiThread(()->{finishTimetableRefresh();if(isDestroyed()||screen!=token||!id.equals(Timetables.active(this)))return;loginAccountPrefill=account;toast(e.getMessage());login();});
+    runOnUiThread(()->{finishTimetableRefresh();if(isDestroyed()||screen!=token||!id.equals(Timetables.active(this)))return;toast("请在学校账号中重新登录后同步。\n"+e.getMessage());});
    }catch(Exception e){
     runOnUiThread(()->{finishTimetableRefresh();if(!isDestroyed()&&screen==token)toast("刷新失败，已保留原课表。\n"+e.getMessage());});
    }
   });
+ }
+ private void applyTimetableSync(String remoteCourses,ClassTimes remoteTimes,String source){
+  if(Course.parse(remoteCourses).isEmpty())throw new IllegalArgumentException("来源未返回课程");
+  SharedPreferences prefs=getPreferences(0);if(!source.equals(schoolId))throw new IllegalStateException("课表来源已变化");
+  if(prefs.contains("syncSource")&&!source.equals(prefs.getString("syncSource","")))throw new IllegalStateException("同步来源不匹配，请重新导入");
+  String baseline=prefs.getString(TimetableSync.BASELINE,null);TimetableSync.Result merged=TimetableSync.merge(baseline,data,remoteCourses,prefs.getStringSet(TimetableSync.PROTECTED,Collections.emptySet()),adjustments);
+  ClassTimes nextTimes=remoteTimes!=null&&baseline!=null&&classTimes.encode().equals(prefs.getString("syncClassTimes",""))?remoteTimes:classTimes;
+  nextTimes.validate(Course.parse(merged.courses));for(CourseAdjustment change:CourseAdjustment.parse(adjustments))if(change.replacement!=null)nextTimes.validate(Collections.singletonList(change.replacement));
+  boolean changed=!data.equals(merged.courses)||!classTimes.encode().equals(nextTimes.encode());Map<String,?> before=prefs.getAll();
+  if(!prefs.edit().putString("courses",merged.courses).putString("classTimes",nextTimes.encode()).putString(TimetableSync.BASELINE,remoteCourses).putStringSet(TimetableSync.PROTECTED,merged.protectedNames).putString("syncClassTimes",remoteTimes==null?classTimes.encode():remoteTimes.encode()).putString("syncSource",source).putBoolean("schoolImported",true).commit()){
+   SharedPreferences.Editor rollback=prefs.edit();for(String key:new String[]{"courses","classTimes",TimetableSync.BASELINE,TimetableSync.PROTECTED,"syncClassTimes","syncSource","schoolImported"}){Object value=before.get(key);if(value==null)rollback.remove(key);else if(value instanceof String)rollback.putString(key,(String)value);else if(value instanceof Boolean)rollback.putBoolean(key,(Boolean)value);else if(value instanceof Set)rollback.putStringSet(key,(Set<String>)value);}rollback.commit();throw new IllegalStateException("本机保存失败");
+  }
+  data=merged.courses;setTimes(nextTimes);homePage=null;cachedData=null;CourseWidget.updateAll(this);if(primaryTab()==0)home();
+  toast(baseline==null?"已建立来源基线，现有课程保留，下次同步将检查来源更新。":changed?"课表已同步，本地修改和删除已保留。":"来源课表没有可应用的更新。");
+ }
+ private void refreshWebTimetable(){
+  String url;try{url=schoolAccount.webSource(Timetables.active(this));}catch(Exception e){toast("同步来源无法解密，请重新网页导入。");return;}
+  if(url==null){toast("请先重新网页导入一次，以绑定此课表的同步来源。");return;}
+  String id=Timetables.active(this),baseline=data,oldTimes=classTimes.encode(),oldTerm=term,oldAdjustments=adjustments;int token=screen;
+  busy=true;updateSystemBack();toast("正在后台同步课表…");
+  try{webTimetableSync=new WebTimetableSync(this,url,worker,(courses,times,error)->{
+   webTimetableSync=null;finishTimetableRefresh();if(isDestroyed()||screen!=token||!id.equals(Timetables.active(this)))return;
+   if(error!=null){toast(error+" 原课表已保留。");return;}
+   if(!data.equals(baseline)||!term.equals(oldTerm)||!classTimes.encode().equals(oldTimes)||!adjustments.equals(oldAdjustments)){toast("课表已修改，请重新同步");return;}
+   try{applyTimetableSync(courses,times,"web");}catch(Exception e){toast("同步失败，原课表已保留。\n"+e.getMessage());}
+  });}catch(Exception e){finishTimetableRefresh();toast("无法读取同步来源，原课表已保留。");}
  }
  private void finishTimetableRefresh(){busy=false;if(isDestroyed())return;updateSystemBack();View refresh=root.findViewWithTag("refresh-timetable");if(refresh!=null){refresh.setEnabled(true);refresh.setContentDescription("刷新课表");}}
  private void schoolPicker(Runnable back){
@@ -1076,7 +1101,7 @@ public class MainActivity extends Activity {
   }catch(RuntimeException e){home();toast("请检查课表及开学日期设置");}
  }
   @Override public void onBackPressed(){if(aiAttachmentMenu!=null&&aiAttachmentMenu.open){aiAttachmentMenu.close(true);return;}if(sideNavigation!=null&&sideNavigation.close(true))return;if(pageMotion.isRunning()){if(pageMotion.isReturning())return;pageMotion.reverse(()->{skipPageMotion=true;try{onBackPressed();}finally{skipPageMotion=false;}});return;}if(exitingOverlay!=null&&exitingOverlay.isAttachedToWindow())return;if(navigationOverlay!=null){navigationOverlay.requestClose();return;}if(choiceSheet!=null&&choiceSheet.getVisibility()==View.VISIBLE){choiceSheet.close(true);return;}if(busy){toast("正在同步，请稍候");return;}if(pageBack!=null){cancelBackMotion();backPage();return;}if(tasksVisible||parcelsVisible){home();return;}super.onBackPressed();}
- @Override protected void onDestroy(){if(aiAttachmentMenu!=null)aiAttachmentMenu.close(true);if(aiStrengthDialog!=null)aiStrengthDialog.dismiss();if(aiCall!=null)aiCall.cancel();if(sideNavigation!=null)sideNavigation.close(false);if(taskPage!=null)taskPage.close();if(parcelPage!=null)parcelPage.close();remoteResumed=false;if(remote!=null)remote.unlisten(remoteListener);if(remoteDialog!=null)remoteDialog.dismiss();remoteHandler.removeCallbacksAndMessages(null);if(getWindow().getDecorView().getViewTreeObserver().isAlive())getWindow().getDecorView().getViewTreeObserver().removeOnScrollChangedListener(remoteScroll);if(unsavedDialog!=null)unsavedDialog.dismiss();if(widgetDialog!=null)widgetDialog.dismiss();screen++;pageMotion.cancel();while(navigationOverlay!=null)navigationOverlay.close(false);if(Build.VERSION.SDK_INT>=33&&backRegistered)MotionBack.unregister(getWindow(),systemBack);if(stage!=null)for(int i=0;i<stage.getChildCount();i++)stage.getChildAt(i).animate().cancel();worker.shutdownNow();homePage=null;if(password!=null)password.getText().clear();super.onDestroy();}
+ @Override protected void onDestroy(){if(aiAttachmentMenu!=null)aiAttachmentMenu.close(true);if(aiStrengthDialog!=null)aiStrengthDialog.dismiss();if(aiCall!=null)aiCall.cancel();if(sideNavigation!=null)sideNavigation.close(false);if(taskPage!=null)taskPage.close();if(parcelPage!=null)parcelPage.close();remoteResumed=false;if(remote!=null)remote.unlisten(remoteListener);if(remoteDialog!=null)remoteDialog.dismiss();remoteHandler.removeCallbacksAndMessages(null);if(getWindow().getDecorView().getViewTreeObserver().isAlive())getWindow().getDecorView().getViewTreeObserver().removeOnScrollChangedListener(remoteScroll);if(unsavedDialog!=null)unsavedDialog.dismiss();if(widgetDialog!=null)widgetDialog.dismiss();screen++;if(webTimetableSync!=null)webTimetableSync.cancel();pageMotion.cancel();while(navigationOverlay!=null)navigationOverlay.close(false);if(Build.VERSION.SDK_INT>=33&&backRegistered)MotionBack.unregister(getWindow(),systemBack);if(stage!=null)for(int i=0;i<stage.getChildCount();i++)stage.getChildAt(i).animate().cancel();worker.shutdownNow();homePage=null;if(password!=null)password.getText().clear();super.onDestroy();}
  // Retain one Activity-owned home only; data/term/notes/choices changes replace it.
  private class HomePage {
   final LinearLayout view=root;final ViewPager pages=pager;final ScrollView scroll=timetableScroll;final FrameLayout days=daysBar;
