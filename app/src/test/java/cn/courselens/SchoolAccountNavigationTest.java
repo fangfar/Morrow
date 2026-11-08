@@ -44,5 +44,25 @@ public class SchoolAccountNavigationTest {
    assertEquals(Timetables.active(a),intent.getStringExtra("timetable"));assertEquals((String)getField(a,"data"),intent.getStringExtra("baseline"));
   }
  }
+ @Test public void switchingAdaptedSchoolsDoesNotAnimateTheAccountPage(){
+  try(var controller=Robolectric.buildActivity(MainActivity.class).setup()){
+   MainActivity a=controller.get();setField(a,"loginSchool","squ");
+   ExecutorService original=getField(a,"worker");original.shutdownNow();
+   // Keep this navigation check offline; school connection behavior is tested separately.
+   setField(a,"worker",new java.util.concurrent.ThreadPoolExecutor(0,1,0,java.util.concurrent.TimeUnit.MILLISECONDS,new java.util.concurrent.LinkedBlockingQueue<>()){@Override public void execute(Runnable task){}});
+   callInstanceMethod(a,"menu");settle();((View)getField(a,"root")).findViewWithTag("school-account").performClick();settle();
+   View content=a.findViewById(android.R.id.content);content.measure(View.MeasureSpec.makeMeasureSpec(1080,View.MeasureSpec.EXACTLY),View.MeasureSpec.makeMeasureSpec(1920,View.MeasureSpec.EXACTLY));content.layout(0,0,1080,1920);
+   for(String id:new String[]{"xzit","squ"}){
+    ((View)getField(a,"root")).findViewWithTag("select-school").performClick();settle();
+    MainActivity.NavigationOverlay picker=getField(a,"navigationOverlay");picker.body.findViewWithTag("school-"+id).performClick();
+    PageMotion motion=getField(a,"pageMotion");assertFalse("School switching must not animate the page",motion.isRunning());
+    assertEquals(id,getField(a,"loginSchool"));assertFalse((Boolean)getField(a,"skipPageMotion"));
+    View page=getField(a,"root");assertEquals("学校账号",page.getTag());assertNotNull(page.findViewWithTag("school-password-input"));
+    android.widget.LinearLayout selector=page.findViewWithTag("select-school");android.widget.LinearLayout labels=(android.widget.LinearLayout)selector.getChildAt(1);
+    assertEquals(id.equals("xzit")?"徐州工程学院":"宿迁学院",((android.widget.TextView)labels.getChildAt(0)).getText().toString());
+    settle();content.measure(View.MeasureSpec.makeMeasureSpec(1080,View.MeasureSpec.EXACTLY),View.MeasureSpec.makeMeasureSpec(1920,View.MeasureSpec.EXACTLY));content.layout(0,0,1080,1920);
+   }
+  }
+ }
  private static void settle(){shadowOf(Looper.getMainLooper()).idleFor(Duration.ofMillis(400));}
 }

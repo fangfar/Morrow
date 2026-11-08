@@ -1034,7 +1034,7 @@ public class MainActivity extends Activity {
  private void schoolPicker(Runnable back){
   if(busy){toast("请等待同步结束");return;}NavigationOverlay menu=new NavigationOverlay(true,"选择学校",root.findViewWithTag("select-school"));String[] ids={"squ","xzit"},names={"宿迁学院","徐州工程学院"};
   menuItem(menu,"其他学校（网页导入）","school-web",this::openWebTimetable);
-  for(int i=0;i<ids.length;i++){String id=ids[i];TextView item=menuItem(menu,names[i],"school-"+id,()->{if(password!=null)password.getText().clear();if(account!=null)account.getText().clear();loginAccountPrefill=null;SchoolClient previous=school;worker.execute(previous::logout);loginSchool=id;school=schoolClient(id);login(back);});secondaryUi.popupChecked(item,id.equals(loginSchool));}
+  for(int i=0;i<ids.length;i++){String id=ids[i];TextView item=menuItem(menu,names[i],"school-"+id,()->{if(password!=null)password.getText().clear();if(account!=null)account.getText().clear();loginAccountPrefill=null;SchoolClient previous=school;worker.execute(previous::logout);loginSchool=id;school=schoolClient(id);skipPageMotion=true;try{login(back);}finally{skipPageMotion=false;}});secondaryUi.popupChecked(item,id.equals(loginSchool));}
  }
  private void reloadTimetable(){reloadTimetable(this::home);}
  private void reloadTimetable(Runnable destination){
