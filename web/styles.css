@@ -207,6 +207,7 @@ a:focus-visible,button:focus-visible,summary:focus-visible {
 }
 
 .button {
+  border-radius:8px;
   display:inline-flex;
   align-items:center;
   justify-content:space-between;
