@@ -37,4 +37,31 @@ public class AccentAndProviderTest {
    MainActivity a=c.get();callInstanceMethod(a,"menu");callInstanceMethod(a,"aiProviderChoices");View choices=getField(a,"root");assertNotNull(choices.findViewWithTag("ai-provider-custom"));choices.findViewWithTag("preset-qwen").performClick();View form=getField(a,"root");assertEquals("https://dashscope.aliyuncs.com/compatible-mode/v1",((EditText)form.findViewWithTag("ai-provider-base")).getText().toString());assertEquals("qwen-plus",((EditText)form.findViewWithTag("ai-provider-model")).getText().toString());assertEquals("",((EditText)form.findViewWithTag("ai-key")).getText().toString());assertNull(form.findViewWithTag("ai-key-delete"));callInstanceMethod(a,"aiProviderChoices");((View)getField(a,"root")).findViewWithTag("ai-provider-custom").performClick();form=getField(a,"root");assertEquals("",((EditText)form.findViewWithTag("ai-provider-base")).getText().toString());assertEquals("",((EditText)form.findViewWithTag("ai-provider-model")).getText().toString());
   }
  }
+ @Test public void providerFormReturnsToChoicesBeforeApiSettings(){
+  try(ActivityController<MainActivity> c=Robolectric.buildActivity(MainActivity.class).setup()){
+   MainActivity a=c.get();callInstanceMethod(a,"menu");callInstanceMethod(a,"aiSettings");callInstanceMethod(a,"aiProviderChoices");
+   ((View)getField(a,"root")).findViewWithTag("preset-qwen").performClick();callInstanceMethod(a,"backPage");
+   assertNotNull("Back skipped the provider choices",((View)getField(a,"root")).findViewWithTag("preset-qwen"));
+   callInstanceMethod(a,"backPage");assertEquals("API 配置",((View)getField(a,"root")).getTag());
+  }
+ }
+ @Test public void apiKeyUsesOrdinaryKeyboardAndAcceptsPaste(){
+  try(ActivityController<MainActivity> c=Robolectric.buildActivity(MainActivity.class).setup()){
+   MainActivity a=c.get();callInstanceMethod(a,"aiProviderChoices");((View)getField(a,"root")).findViewWithTag("ai-provider-custom").performClick();
+   EditText key=((View)getField(a,"root")).findViewWithTag("ai-key");
+   assertEquals(0,key.getInputType()&android.text.InputType.TYPE_MASK_VARIATION);
+   android.view.inputmethod.EditorInfo editor=new android.view.inputmethod.EditorInfo();assertNotNull(key.onCreateInputConnection(editor));
+   assertEquals(0,editor.inputType&android.text.InputType.TYPE_MASK_VARIATION);
+   assertTrue((editor.imeOptions&android.view.inputmethod.EditorInfo.IME_FLAG_NO_PERSONALIZED_LEARNING)!=0);
+   android.content.ClipboardManager clipboard=a.getSystemService(android.content.ClipboardManager.class);clipboard.setPrimaryClip(android.content.ClipData.newPlainText("test","synthetic-key"));
+   key.requestFocus();key.setSelection(0);assertTrue(key.onTextContextMenuItem(android.R.id.paste));assertEquals("synthetic-key",key.getText().toString());
+   assertFalse(key.isSaveEnabled());assertNotNull(key.getTransformationMethod());
+  }
+ }
+ @Test public void editingExistingProviderReturnsToApiSettings(){
+  try(ActivityController<MainActivity> c=Robolectric.buildActivity(MainActivity.class).setup()){
+   MainActivity a=c.get();callInstanceMethod(a,"aiEditProvider",ClassParameter.from(AiProviders.Config.class,AiProviders.defaultConfig("synthetic-key")));
+   callInstanceMethod(a,"backPage");assertEquals("API 配置",((View)getField(a,"root")).getTag());
+  }
+ }
 }
