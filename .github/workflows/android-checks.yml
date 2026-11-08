@@ -53,6 +53,11 @@ jobs:
           cache: gradle
       - uses: android-actions/setup-android@v4
         if: steps.scope.outputs.scope != 'config' && steps.scope.outputs.scope != 'docs'
+      - name: Prepare verified Gradle distribution
+        if: steps.scope.outputs.scope != 'config' && steps.scope.outputs.scope != 'docs'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python3 tests/PrepareGradle.py
       - name: Install Android SDK
         if: steps.scope.outputs.scope != 'config' && steps.scope.outputs.scope != 'docs'
         run: sdkmanager 'platforms;android-34' 'build-tools;34.0.0'
