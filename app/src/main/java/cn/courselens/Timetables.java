@@ -15,6 +15,19 @@ final class Timetables {
   SharedPreferences registry=registry(context);Map<String,String> names=new LinkedHashMap<>();names.put("",registry.getString("name.","我的课表"));
   for(String id:registry.getString("ids","").split("\n"))if(!id.isEmpty())names.put(id,registry.getString("name."+id,"课表"));return names;
  }
+ static String sourceLabel(Context context,String id){
+  SharedPreferences prefs=preferences(context,id);String notes=prefs.getString("notes","");
+  if(!prefs.getBoolean("schoolImported",notes.startsWith("已从学校同步")||notes.startsWith("已从网页导入"))&&!prefs.contains("syncSource"))return "本地课表 · 未绑定来源";
+  String school=prefs.getString("syncSource",prefs.getString("school","squ"));
+  if(school.equals("squ"))return "宿迁学院";
+  if(school.equals("xzit"))return "徐州工程学院";
+  if(school.equals("web")){
+   String url=prefs.getString("webTimetableUrl","");if(SchoolClient.allowed(url))return "宿迁学院 · 网页导入";
+   if(WebTimetableActivity.allowed(url)){String host=java.net.URI.create(url).getHost();if(host.equalsIgnoreCase("jwglxt.xzit.edu.cn"))return "徐州工程学院 · 网页导入";return "网页导入 · "+host;}
+   return "网页导入 · 来源待绑定";
+  }
+  return "来源待绑定";
+ }
  static void select(Context context,String id){
   if(!names(context).containsKey(id))throw new IllegalArgumentException("课表不存在。");SharedPreferences prefs=preferences(context,id);ClassTimes times=ClassTimes.parse(prefs.getString("classTimes",""));times.validate(Course.parse(prefs.getString("courses","")));
   if(!registry(context).edit().putString("active",id).commit())throw new IllegalStateException("课表切换未保存，请重试。");

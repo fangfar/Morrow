@@ -407,7 +407,7 @@ public class MainActivity extends Activity {
   LinearLayout body=secondary("课表管理","",this::menu);LinearLayout courses=settingsGroup(body,"");
   option(courses,R.drawable.ic_calendar,"课程管理","",()->edit(this::timetableManagement)).setTag("manage-courses");
   LinearLayout list=settingsGroup(body,"切换课表");String current=Timetables.active(this);
-  for(var entry:Timetables.names(this).entrySet()){String id=entry.getKey();boolean selected=id.equals(current);LinearLayout row=option(list,R.drawable.ic_calendar,entry.getValue(),selected?"当前课表":"",()->{if(busy){toast("请等待同步结束");return;}if(selected)return;try{Timetables.select(this,id);reloadTimetable(this::timetableManagement);}catch(Exception e){toast(e.getMessage());}});row.setTag("timetable-"+id);row.setSelected(selected);TextView mark=(TextView)row.getChildAt(row.getChildCount()-1);mark.setText("");if(selected){secondaryUi.styleIcon(mark,R.drawable.ic_check);mark.setBackground(null);}row.setTooltipText("长按修改课表名称");row.setOnLongClickListener(v->{renameTimetable(id,this::timetableManagement);return true;});}
+  for(var entry:Timetables.names(this).entrySet()){String id=entry.getKey();boolean selected=id.equals(current);LinearLayout row=option(list,R.drawable.ic_calendar,entry.getValue(),(selected?"当前课表 · ":"")+Timetables.sourceLabel(this,id),()->{if(busy){toast("请等待同步结束");return;}if(selected)return;try{Timetables.select(this,id);reloadTimetable(this::timetableManagement);}catch(Exception e){toast(e.getMessage());}});row.setTag("timetable-"+id);row.setSelected(selected);TextView mark=(TextView)row.getChildAt(row.getChildCount()-1);mark.setText("");if(selected){secondaryUi.styleIcon(mark,R.drawable.ic_check);mark.setBackground(null);}row.setTooltipText("长按修改课表名称");row.setOnLongClickListener(v->{renameTimetable(id,this::timetableManagement);return true;});}
   option(list,R.drawable.ic_add,"新增课表","",()->newTimetable(this::timetableManagement)).setTag("add-timetable");
  }
  private void dataManagement(){
@@ -430,6 +430,8 @@ public class MainActivity extends Activity {
  private void timetableSettings(){
   if(navigationOverlay!=null)navigationOverlay.close(false);if(pageBack!=null)home();
   View anchor=root.findViewWithTag("timetable-settings");NavigationOverlay menu=new NavigationOverlay(true,"课表设置",anchor);
+  menu.menuWidth=264;TextView current=text("",14,INK);current.setText(timetableCaption(Timetables.active(this)));current.setTypeface(null,Typeface.NORMAL);current.setPadding(dp(16),dp(8),dp(16),dp(8));current.setMinHeight(dp(48));current.setTag("timetable-source-summary");current.setContentDescription("当前课表，"+current.getText());menu.body.addView(current);secondaryUi.popupDivider(menu.body);
+  menuItem(menu,"切换课表","timetable-switch",this::timetablePicker).setEnabled(!busy);
   menuItem(menu,"添加课程","timetable-add-course",()->courseForm(null,-1,this::home));
   menuItem(menu,"课程调整恢复","adjustment-manager",this::adjustmentManager);
   menuItem(menu,"学校登录","timetable-login",this::login);
@@ -1043,9 +1045,13 @@ public class MainActivity extends Activity {
   data=prefs.getString("courses","");notes=prefs.getString("notes","");term=prefs.getString("term","2026-08-31");week=prefs.getInt("week",1);adjustments=prefs.getString("courseAdjustments","");displayChoices=new HashSet<>(prefs.getStringSet("displayChoices",Collections.emptySet()));setTimes(ClassTimes.parse(prefs.getString("classTimes","")));schoolId=prefs.getString("school","squ");loginSchool=schoolId;school=schoolClient(schoolId);homePage=null;cachedData=null;timetableScrollY=0;settingsScrollY=0;settingsPage=null;destination.run();CourseWidget.updateAll(this);
  }
  private void timetablePicker(){
-  if(busy){toast("请等待同步结束");return;}NavigationOverlay menu=sheetMenu("切换课表");String current=Timetables.active(this);
-  for(var entry:Timetables.names(this).entrySet()){String id=entry.getKey();menuItem(menu,entry.getValue(),"timetable-"+id,()->{try{Timetables.select(this,id);reloadTimetable();}catch(Exception e){toast(e.getMessage());}});TextView item=menu.body.findViewWithTag("timetable-"+id);secondaryUi.popupChecked(item,id.equals(current));item.setTooltipText("长按修改课表名称");item.setOnLongClickListener(v->{menu.close(true);renameTimetable(id);return true;});}
+  if(busy){toast("请等待同步结束");return;}View anchor=root.findViewWithTag("timetable-settings");NavigationOverlay menu=new NavigationOverlay(true,"切换课表",anchor);menu.menuWidth=264;String current=Timetables.active(this);
+  for(var entry:Timetables.names(this).entrySet()){String id=entry.getKey();menuItem(menu,entry.getValue(),"timetable-"+id,()->{try{Timetables.select(this,id);reloadTimetable();}catch(Exception e){toast(e.getMessage());}});TextView item=menu.body.findViewWithTag("timetable-"+id);item.setText(timetableCaption(id));item.setContentDescription(entry.getValue()+"，"+Timetables.sourceLabel(this,id)+(id.equals(current)?"，当前课表":""));secondaryUi.popupChecked(item,id.equals(current));item.setTooltipText("长按修改课表名称");item.setOnLongClickListener(v->{menu.close(true);renameTimetable(id);return true;});}
   secondaryUi.popupDivider(menu.body);menuItem(menu,"新增课表","new-timetable",this::newTimetable);
+ }
+ private CharSequence timetableCaption(String id){
+  String name=Timetables.names(this).get(id),source=Timetables.sourceLabel(this,id);android.text.SpannableString caption=new android.text.SpannableString(name+"\n"+source);
+  caption.setSpan(new android.text.style.StyleSpan(Typeface.BOLD),0,name.length(),0);caption.setSpan(new android.text.style.RelativeSizeSpan(12f/14f),name.length()+1,caption.length(),0);caption.setSpan(new android.text.style.ForegroundColorSpan(MUTED),name.length()+1,caption.length(),0);return caption;
  }
  private void newTimetable(){newTimetable(this::home);}
  private void newTimetable(Runnable back){
