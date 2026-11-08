@@ -214,18 +214,18 @@ a:focus-visible,button:focus-visible,summary:focus-visible {
   gap:50px;
   min-height:54px;
   padding:14px 24px;
-  background:var(--ink);
-  color:var(--paper);
+  background:var(--paper);
+  color:var(--ink);
   font-size:12px;
   letter-spacing:.14em;
-  border:1px solid var(--ink);
-  transition:background .3s,color .3s;
+  border:1px solid var(--line);
+  transition:background .3s,color .3s,border-color .3s;
   position:relative;
 }
 
 .button:hover {
-  background:var(--paper);
-  color:var(--ink);
+  background:rgba(28,28,28,.02);
+  border-color:var(--ink);
 }
 
 .button::after {
@@ -432,15 +432,7 @@ figcaption {
 }
 
 .download .button {
-  background:var(--paper);
-  color:var(--ink);
-  border-color:var(--line);
   min-width:260px;
-}
-
-.download .button:hover {
-  background:rgba(28,28,28,.02);
-  border-color:var(--ink);
 }
 
 .download .fine-print {
