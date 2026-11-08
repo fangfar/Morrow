@@ -408,8 +408,7 @@ figcaption {
 }
 
 .download {
-  background:var(--ink);
-  color:var(--paper);
+  border-block:1px solid var(--line);
   padding-block:120px;
 }
 
@@ -418,10 +417,6 @@ figcaption {
   grid-template-columns:7fr 5fr;
   align-items:center;
   gap:72px;
-}
-
-.download p {
-  color:#c0bfbc;
 }
 
 .download h2 {
@@ -439,13 +434,13 @@ figcaption {
 .download .button {
   background:var(--paper);
   color:var(--ink);
-  border-color:var(--paper);
+  border-color:var(--line);
   min-width:260px;
 }
 
 .download .button:hover {
-  background:var(--ink);
-  color:var(--paper);
+  background:rgba(28,28,28,.02);
+  border-color:var(--ink);
 }
 
 .download .fine-print {
