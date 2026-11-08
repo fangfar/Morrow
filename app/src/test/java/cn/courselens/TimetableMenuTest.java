@@ -27,12 +27,12 @@ public class TimetableMenuTest {
    a.getPreferences(0).edit().putString("school","xzit").commit();assertEquals("徐州工程学院",Timetables.sourceLabel(a,nativeId));
    Timetables.add(a,"合成网页课表名称较长时也应完整显示","web",ClassTimes.DEFAULT,"2026-09-01");String webId=Timetables.active(a);a.getPreferences(0).edit().putBoolean("schoolImported",true).putString("webTimetableUrl","https://portal.example.edu.cn/").commit();assertEquals("网页导入 · portal.example.edu.cn",Timetables.sourceLabel(a,webId));
    callInstanceMethod(a,"reloadTimetable");settle();View content=a.findViewById(android.R.id.content);layout(content);content.findViewWithTag("timetable-settings").performClick();settle();layout(content);
-   TextView summary=content.findViewWithTag("timetable-source-summary");assertTrue(summary.getText().toString().contains("portal.example.edu.cn"));assertNotNull(content.findViewWithTag("refresh-timetable"));snapshot(a,content,name+"-menu");readable(getField(a,"root"));
+   TextView summary=content.findViewWithTag("timetable-source-summary");assertTrue(summary.getContentDescription().toString().contains("portal.example.edu.cn"));assertTrue(summary.getText().toString().contains("…"));assertEquals(2,summary.getLineCount());assertTrue(((View)getField(a,"root")).getWidth()<=168*a.getResources().getDisplayMetrics().density+1);assertNotNull(content.findViewWithTag("refresh-timetable"));snapshot(a,content,name+"-menu");readable(getField(a,"root"));
    content.findViewWithTag("timetable-switch").performClick();settle();layout(content);
-   TextView chosen=content.findViewWithTag("timetable-"+webId);assertTrue(chosen.isSelected());assertTrue(chosen.getText().toString().contains("portal.example.edu.cn"));
-   assertTrue(((TextView)content.findViewWithTag("timetable-"+nativeId)).getText().toString().contains("徐州工程学院"));readable(getField(a,"root"));snapshot(a,content,name+"-picker");
+   TextView chosen=content.findViewWithTag("timetable-"+webId);assertTrue(chosen.isSelected());assertTrue(chosen.getContentDescription().toString().contains("portal.example.edu.cn"));
+   assertTrue(((TextView)content.findViewWithTag("timetable-"+nativeId)).getContentDescription().toString().contains("徐州工程学院"));readable(getField(a,"root"));snapshot(a,content,name+"-picker");
    content.findViewWithTag("timetable-").performClick();settle();assertEquals("",Timetables.active(a));layout(content);content.findViewWithTag("timetable-settings").performClick();settle();
-   assertTrue(((TextView)content.findViewWithTag("timetable-source-summary")).getText().toString().contains("未绑定来源"));assertEquals("https://portal.example.edu.cn/",Timetables.preferences(a,webId).getString("webTimetableUrl",null));
+   assertTrue(((TextView)content.findViewWithTag("timetable-source-summary")).getContentDescription().toString().contains("未绑定来源"));assertEquals("https://portal.example.edu.cn/",Timetables.preferences(a,webId).getString("webTimetableUrl",null));
   }
  }
  private void readable(View view){

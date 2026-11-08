@@ -430,7 +430,7 @@ public class MainActivity extends Activity {
  private void timetableSettings(){
   if(navigationOverlay!=null)navigationOverlay.close(false);if(pageBack!=null)home();
   View anchor=root.findViewWithTag("timetable-settings");NavigationOverlay menu=new NavigationOverlay(true,"课表设置",anchor);
-  menu.menuWidth=264;TextView current=text("",14,INK);current.setText(timetableCaption(Timetables.active(this)));current.setTypeface(null,Typeface.NORMAL);current.setPadding(dp(16),dp(8),dp(16),dp(8));current.setMinHeight(dp(48));current.setTag("timetable-source-summary");current.setContentDescription("当前课表，"+current.getText());menu.body.addView(current);secondaryUi.popupDivider(menu.body);
+  TextView current=text("",14,INK);current.setText(timetableCaption(Timetables.active(this)));current.setTypeface(null,Typeface.NORMAL);current.setPadding(dp(16),dp(8),dp(16),dp(8));current.setMinHeight(dp(48));current.setTag("timetable-source-summary");current.setContentDescription("当前课表，"+Timetables.names(this).get(Timetables.active(this))+"，"+Timetables.sourceLabel(this,Timetables.active(this)));menu.body.addView(current);secondaryUi.popupDivider(menu.body);
   menuItem(menu,"切换课表","timetable-switch",this::timetablePicker).setEnabled(!busy);
   menuItem(menu,"添加课程","timetable-add-course",()->courseForm(null,-1,this::home));
   menuItem(menu,"课程调整恢复","adjustment-manager",this::adjustmentManager);
@@ -1045,12 +1045,14 @@ public class MainActivity extends Activity {
   data=prefs.getString("courses","");notes=prefs.getString("notes","");term=prefs.getString("term","2026-08-31");week=prefs.getInt("week",1);adjustments=prefs.getString("courseAdjustments","");displayChoices=new HashSet<>(prefs.getStringSet("displayChoices",Collections.emptySet()));setTimes(ClassTimes.parse(prefs.getString("classTimes","")));schoolId=prefs.getString("school","squ");loginSchool=schoolId;school=schoolClient(schoolId);homePage=null;cachedData=null;timetableScrollY=0;settingsScrollY=0;settingsPage=null;destination.run();CourseWidget.updateAll(this);
  }
  private void timetablePicker(){
-  if(busy){toast("请等待同步结束");return;}View anchor=root.findViewWithTag("timetable-settings");NavigationOverlay menu=new NavigationOverlay(true,"切换课表",anchor);menu.menuWidth=264;String current=Timetables.active(this);
+  if(busy){toast("请等待同步结束");return;}View anchor=root.findViewWithTag("timetable-settings");NavigationOverlay menu=new NavigationOverlay(true,"切换课表",anchor);String current=Timetables.active(this);
   for(var entry:Timetables.names(this).entrySet()){String id=entry.getKey();menuItem(menu,entry.getValue(),"timetable-"+id,()->{try{Timetables.select(this,id);reloadTimetable();}catch(Exception e){toast(e.getMessage());}});TextView item=menu.body.findViewWithTag("timetable-"+id);item.setText(timetableCaption(id));item.setContentDescription(entry.getValue()+"，"+Timetables.sourceLabel(this,id)+(id.equals(current)?"，当前课表":""));secondaryUi.popupChecked(item,id.equals(current));item.setTooltipText("长按修改课表名称");item.setOnLongClickListener(v->{menu.close(true);renameTimetable(id);return true;});}
   secondaryUi.popupDivider(menu.body);menuItem(menu,"新增课表","new-timetable",this::newTimetable);
  }
  private CharSequence timetableCaption(String id){
-  String name=Timetables.names(this).get(id),source=Timetables.sourceLabel(this,id);android.text.SpannableString caption=new android.text.SpannableString(name+"\n"+source);
+  android.text.TextPaint paint=new android.text.TextPaint(Paint.ANTI_ALIAS_FLAG);float scale=getResources().getDisplayMetrics().scaledDensity;int width=dp(SecondaryUi.MENU_WIDTH-8-32-26);
+  paint.setTextSize(14*scale);paint.setTypeface(Typeface.DEFAULT_BOLD);String name=TextUtils.ellipsize(Timetables.names(this).get(id),paint,width,TextUtils.TruncateAt.END).toString();
+  paint.setTextSize(12*scale);paint.setTypeface(Typeface.DEFAULT);String source=TextUtils.ellipsize(Timetables.sourceLabel(this,id),paint,width,TextUtils.TruncateAt.END).toString();android.text.SpannableString caption=new android.text.SpannableString(name+"\n"+source);
   caption.setSpan(new android.text.style.StyleSpan(Typeface.BOLD),0,name.length(),0);caption.setSpan(new android.text.style.RelativeSizeSpan(12f/14f),name.length()+1,caption.length(),0);caption.setSpan(new android.text.style.ForegroundColorSpan(MUTED),name.length()+1,caption.length(),0);return caption;
  }
  private void newTimetable(){newTimetable(this::home);}
