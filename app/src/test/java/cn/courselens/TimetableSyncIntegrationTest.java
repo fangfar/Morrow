@@ -24,7 +24,7 @@ public class TimetableSyncIntegrationTest {
    String edited="1|1|2|合成数学|自选教室|1-8";setField(a,"data",edited);callInstanceMethod(a,"save");setField(a,"school",client);
    callInstanceMethod(a,"refreshTimetable");ExecutorService worker=getField(a,"worker");worker.submit(()->{}).get(5,TimeUnit.SECONDS);settle();
    assertFalse((Boolean)getField(a,"busy"));assertEquals(edited,getField(a,"data"));assertEquals(edited,prefs.getString("courses",null));assertEquals(FRESH,prefs.getString(TimetableSync.BASELINE,null));
-   callInstanceMethod(a,"quickMenu");assertNotNull(((View)getField(a,"root")).findViewWithTag("refresh-timetable"));
+   ((View)getField(a,"root")).findViewWithTag("timetable-settings").performClick();assertNotNull("Visible timetable dropdown lacks sync",((View)getField(a,"root")).findViewWithTag("refresh-timetable"));
   }
  }
  @Test public void sourceFailureAndConcurrentEditsDoNotAdvanceSnapshot()throws Exception {

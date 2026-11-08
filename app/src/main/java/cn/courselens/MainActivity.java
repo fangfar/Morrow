@@ -433,6 +433,7 @@ public class MainActivity extends Activity {
   menuItem(menu,"添加课程","timetable-add-course",()->courseForm(null,-1,this::home));
   menuItem(menu,"课程调整恢复","adjustment-manager",this::adjustmentManager);
   menuItem(menu,"学校登录","timetable-login",this::login);
+  if(getPreferences(0).getBoolean("schoolImported",notes.startsWith("已从学校同步")||notes.startsWith("已从网页导入")))menuItem(menu,"同步课表","refresh-timetable",this::refreshTimetable).setEnabled(!busy);
  }
  private void clearAiExams(){
   String timetable=Timetables.active(this),baseline=getPreferences(0).getString("aiExams","[]");AlertDialog dialog=new AlertDialog.Builder(this,R.style.SecondaryDialog).setTitle("清空考试记录？").setMessage("将删除当前课表中手动保存的所有考试记录。课程不会被删除。").setNegativeButton("取消",null).setPositiveButton("清空",(d,w)->{if(!timetable.equals(Timetables.active(this))||!baseline.equals(getPreferences(0).getString("aiExams","[]"))){toast("考试记录已变化，请重试。");return;}if(!getPreferences(0).edit().remove("aiExams").commit()){getPreferences(0).edit().putString("aiExams",baseline).commit();toast("清空失败，请重试。");return;}homePage=null;toast("考试记录已清空。");}).create();dialog.show();styleDialog(dialog,true);
