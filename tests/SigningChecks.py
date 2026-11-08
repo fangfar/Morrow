@@ -29,6 +29,9 @@ with tempfile.TemporaryDirectory() as folder:
         command = [str(wrapper)] if os.name == "nt" else ["sh", str(wrapper)]
         result = subprocess.run([*command, "--no-daemon" if options.signed else "--daemon", "-p", str(fixture), "help", *args], cwd=root, env=environment, capture_output=True, text=True)
         if expected:
+            if result.returncode == 0 or expected not in result.stdout + result.stderr:
+                print(result.stdout)
+                print(result.stderr)
             assert result.returncode != 0 and expected in result.stdout + result.stderr, label
         else:
             assert result.returncode == 0, label
