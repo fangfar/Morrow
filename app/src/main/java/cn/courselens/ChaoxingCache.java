@@ -16,7 +16,7 @@ final class ChaoxingCache {
   byte[] digest=MessageDigest.getInstance("SHA-256").digest(account.trim().getBytes(StandardCharsets.UTF_8));StringBuilder key=new StringBuilder();for(byte value:digest)key.append(String.format(java.util.Locale.ROOT,"%02x",value&255));
   file=new AtomicFile(new File(context.getFilesDir(),"chaoxing-work-"+key+".json"));
  }
- static void clearAll(Context context)throws IOException {
+ static synchronized void clearAll(Context context)throws IOException {
   File[] files=context.getFilesDir().listFiles();if(files==null)throw new IOException("任务数据目录无法读取");
   for(File cached:files)if(cached.getName().matches("chaoxing-work-[0-9a-f]{64}\\.json(\\.bak|\\.new)?")&&!cached.delete()&&cached.exists())throw new IOException("任务缓存删除失败");
  }
@@ -42,14 +42,14 @@ final class ChaoxingCache {
   for(int i=0;i<disabled.length();i++){String key=disabled.getString(i);if(!key.matches("[0-9]{1,256}:[0-9]{1,256}"))throw new JSONException("Invalid disabled course");result.disabledCourses.add(key);}
   result.intervalMinutes=value.has("intervalMinutes")?value.getInt("intervalMinutes"):60;result.lastAttempt=value.has("lastAttempt")?value.getLong("lastAttempt"):0;if(result.intervalMinutes<0||result.intervalMinutes>TaskRefresh.MAX_MINUTES||result.lastAttempt<0)throw new JSONException("Invalid refresh settings");return result;
  }
- ChaoxingClient.Result load()throws Exception {
+ ChaoxingClient.Result load()throws Exception {synchronized(ChaoxingCache.class){
   if(file.getBaseFile().length()>MAX_BYTES)throw new IOException("Offline data too large");
   try{return decode(new String(file.readFully(),StandardCharsets.UTF_8));}catch(FileNotFoundException e){return null;}
- }
- void save(ChaoxingClient.Result result)throws Exception {
+ }}
+ void save(ChaoxingClient.Result result)throws Exception {synchronized(ChaoxingCache.class){
   byte[] data=encode(result).getBytes(StandardCharsets.UTF_8);if(data.length>MAX_BYTES)throw new IOException("Offline data too large");FileOutputStream out=null;
   try{out=file.startWrite();out.write(data);file.finishWrite(out);}catch(Exception e){if(out!=null)file.failWrite(out);throw e;}
- }
+ }}
  static ChaoxingClient.Work copy(ChaoxingClient.Work value){ChaoxingClient.Work copy=new ChaoxingClient.Work(value.course,value.title,value.status,value.url);copy.deadline=value.deadline;copy.courseKey=value.courseKey;copy.workKey=value.workKey;copy.deletedAt=value.deletedAt;copy.edited=value.edited;copy.deadlineEdited=value.deadlineEdited;copy.originalTitle=value.originalTitle;return copy;}
  private static ChaoxingClient.Work previous(ChaoxingClient.Work item,List<ChaoxingClient.Work> old,List<ChaoxingClient.Work> fresh){
   ChaoxingClient.Work match=null;

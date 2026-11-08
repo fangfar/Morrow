@@ -7,9 +7,10 @@ final class Timetables {
  private static SharedPreferences registry(Context context){return context.getSharedPreferences("timetables",Context.MODE_PRIVATE);}
  static String active(Context context){return registry(context).getString("active","");}
  static SharedPreferences preferences(Context context){return preferences(context,active(context));}
- static SharedPreferences preferences(Context context,String id){
+ static SharedPreferences preferences(Context context,String id){return context.getSharedPreferences(preferenceName(context,id),Context.MODE_PRIVATE);}
+ static String preferenceName(Context context,String id){
   String name=MainActivity.class.getName(),prefix=context.getPackageName()+".";if(name.startsWith(prefix))name=name.substring(prefix.length());
-  return context.getSharedPreferences(name+(id.isEmpty()?"":".timetable."+id),Context.MODE_PRIVATE);
+  return name+(id.isEmpty()?"":".timetable."+id);
  }
  static Map<String,String> names(Context context){
   SharedPreferences registry=registry(context);Map<String,String> names=new LinkedHashMap<>();names.put("",registry.getString("name.","我的课表"));

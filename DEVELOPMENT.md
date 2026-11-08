@@ -41,6 +41,14 @@
 - 外观提供十种强调色（默认粉色），选择保存在独立偏好键 `accentColor`。共享 `Appearance` / `SecondaryUi` 与主题属性统一控制按钮、焦点边框、原生控件、选中面和聊天气泡；黑色在深色模式下使用浅色前景，明暗模式分别配置对比。切换重建后保留外观页和普通聊天草稿、选区。
 - API 添加页提供 DeepSeek、通义千问、智谱 GLM、Kimi、豆包及硅基流动预设，并提供空白自定义配置；预设只填表，不自动保存、选择、发请求或改写已有密钥。豆包需填账号已开通的模型 ID，其余预填模型也可编辑。地址参照 [百炼](https://help.aliyun.com/zh/model-studio/compatibility-of-openai-with-dashscope)、[智谱](https://docs.bigmodel.cn/cn/guide/develop/openai/introduction)、[Kimi](https://platform.kimi.com/docs/api/overview)、[火山方舟](https://console.volcengine.com/ark/region:cn-beijing/docs/text-generation)、[硅基流动](https://docs.siliconflow.cn/docs/api/chat-completions-post)。兼容接口默认关闭推理强度参数，避免将供应商特有字段混用。各平台实际账号调用需单独验证。
 
+## 本地加密备份
+
+- 设置 → 数据管理使用系统文件选择器导出 / 导入 `.morrow` 文件；不申请存储权限，不上传服务器。`BackupCrypto` 使用 PBKDF2-HMAC-SHA256（600000 次、随机 16 字节盐）派生 AES-256-GCM 密钥，随机 12 字节 IV，认证格式头；文件及数据 schema 均为 1，拒绝未知版本、错误参数、认证失败和超过 32 MiB 的文件。密码至少 8 位且二次确认，不持久保存用户密码。
+- `LocalBackup` 显式列出可导出的偏好键，沿用课表、调整、考试、账号隔离任务缓存和 Room 快递记录格式，包括删除历史与通知去重。包含主题、强调色、更新开关及快递设置；不包含学校 / 学习通凭据、API 配置、聊天、网页会话、系统授权或桌面绑定。已有凭据不被恢复覆盖；其他设备上的学习通缓存需登录相同账号后查看。
+- 导入先在后台解密并复用业务解析器校验完整内容，再明确确认覆盖。确认后用随机本机秘密重新加密待恢复数据，该秘密复用 `DeepSeekKey` 的 Keystore 包装，放入独立偏好；关闭进程，用户重新打开时执行。`MorrowApplication.onCreate` 在业务组件与后台任务初始化前等待恢复线程；WorkManager 复用官方按需初始化方式，移除自动初始化器并提供默认 Configuration，避免旧页面 / 请求回写；普通启动没有待恢复文件时只检查文件存在性。
+- 写入前用 AtomicFile 保存加密的完整回退日志，数据库写入使用 Room 事务。失败立即回退；进程中断后先依据日志回退，完成前不启动业务组件。日志与待恢复文件均在 noBackupFilesDir，不提交、不通过系统备份。若存储持续失败而不能回退，保留日志并阻止业务启动，释放空间后重试，不能清空应用数据。成功或回退后重排提醒、取消旧通知并刷新小组件。
+- 回归为 `LocalBackupTest`，涵盖密文往返、随机化、密码错误、篡改、截断、未知版本、路径边界、敏感配置排除、多课表、任务和删除快递、写入故障回退及启动中断恢复。真实设备仍需验证 Android Keystore、系统文件提供器、关闭重启、低空间和跨设备迁移；JVM 合成测试不能代替这些验收。
+
 ## 任务与学习通
 
 - 学校账号、学习通账号与 API 配置复用二级页、表单字段及底部固定操作区；学习通账号不再使用登录对话框，离开时清空密码并解除该页防截屏标记，验证中禁止返回，验证失败保留原配置。

@@ -1,4 +1,4 @@
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android" xmlns:tools="http://schemas.android.com/tools">
  <queries><intent><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.LAUNCHER"/></intent><intent><action android:name="android.provider.Telephony.SMS_DELIVER"/></intent><package android:name="com.android.mms"/><package android:name="com.taobao.taobao"/><package android:name="com.cainiao.wireless"/><package android:name="com.xunmeng.pinduoduo"/></queries>
  <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
  <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS"/>
@@ -8,7 +8,10 @@
  <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PROJECTION"/>
  <uses-permission android:name="android.permission.CAMERA"/>
  <uses-feature android:name="android.hardware.camera.any" android:required="false"/>
- <uses-permission android:name="android.permission.INTERNET"/><application android:enableOnBackInvokedCallback="true" android:label="Morrow" android:icon="@mipmap/ic_launcher" android:roundIcon="@mipmap/ic_launcher" android:theme="@style/AppTheme" android:allowBackup="false" android:fullBackupContent="false" android:dataExtractionRules="@xml/data_extraction_rules" android:usesCleartextTraffic="true" android:networkSecurityConfig="@xml/network_security_config" android:supportsRtl="true">
+ <uses-permission android:name="android.permission.INTERNET"/><application android:name=".MorrowApplication" android:enableOnBackInvokedCallback="true" android:label="Morrow" android:icon="@mipmap/ic_launcher" android:roundIcon="@mipmap/ic_launcher" android:theme="@style/AppTheme" android:allowBackup="false" android:fullBackupContent="false" android:dataExtractionRules="@xml/data_extraction_rules" android:usesCleartextTraffic="true" android:networkSecurityConfig="@xml/network_security_config" android:supportsRtl="true">
+ <provider android:name="androidx.startup.InitializationProvider" android:authorities="${applicationId}.androidx-startup" android:exported="false" tools:node="merge">
+  <meta-data android:name="androidx.work.WorkManagerInitializer" tools:node="remove"/>
+ </provider>
  <activity android:name=".MainActivity" android:exported="true"><intent-filter><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.LAUNCHER"/></intent-filter></activity>
  <activity android:name=".WebTimetableActivity" android:exported="false"/>
  <provider android:name="androidx.core.content.FileProvider" android:authorities="${applicationId}.ocr.files" android:exported="false" android:grantUriPermissions="true">

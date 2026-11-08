@@ -12,6 +12,8 @@ public abstract class ParcelDatabase extends RoomDatabase {
   public long expiresAt;
  }
  @Dao public interface Parcels {
+  @Query("SELECT * FROM parcels ORDER BY id") List<ParcelRecord> backupAll();
+  @Query("SELECT * FROM parcel_seen") List<Seen> backupSeen();
   @Query("SELECT * FROM parcels WHERE deletedAt=0 ORDER BY confirmed, station, createdAt DESC") List<ParcelRecord> all();
   @Query("SELECT * FROM parcels WHERE id=:id AND deletedAt=0") ParcelRecord get(long id);
   @Query("SELECT * FROM parcels WHERE deletedAt>0 ORDER BY deletedAt DESC") List<ParcelRecord> deleted();
