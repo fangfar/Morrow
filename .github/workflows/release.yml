@@ -39,6 +39,10 @@ jobs:
           distribution: temurin
           java-version: '17'
       - uses: android-actions/setup-android@v4
+      - name: Prepare verified Gradle distribution
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python3 tests/PrepareGradle.py
       - name: Install Android SDK
         run: sdkmanager 'platforms;android-34' 'build-tools;34.0.0'
       - name: Regression checks
