@@ -48,10 +48,18 @@ final class Appearance {
 
  static Context wrap(Context base){
   int mode=mode(base);
-  if(mode==SYSTEM)return base;
   Configuration configuration=new Configuration(base.getResources().getConfiguration());
-  int night=mode==DARK?Configuration.UI_MODE_NIGHT_YES:Configuration.UI_MODE_NIGHT_NO;
-  configuration.uiMode=(configuration.uiMode&~Configuration.UI_MODE_NIGHT_MASK)|night;
+  int width=configuration.screenWidthDp;
+  boolean phone=configuration.orientation==Configuration.ORIENTATION_PORTRAIT&&configuration.smallestScreenWidthDp<600&&width>=360&&width<600;
+  if(mode==SYSTEM&&(!phone||width==400))return base;
+  if(phone&&width!=400){
+   // Keep phone pages at the same proportions without changing system or widget resources.
+   float ratio=width/400f;
+   configuration.densityDpi=Math.round(configuration.densityDpi*ratio);
+   configuration.screenWidthDp=400;configuration.screenHeightDp=Math.round(configuration.screenHeightDp/ratio);
+   configuration.smallestScreenWidthDp=Math.round(configuration.smallestScreenWidthDp/ratio);
+  }
+  if(mode!=SYSTEM){int night=mode==DARK?Configuration.UI_MODE_NIGHT_YES:Configuration.UI_MODE_NIGHT_NO;configuration.uiMode=(configuration.uiMode&~Configuration.UI_MODE_NIGHT_MASK)|night;}
   return base.createConfigurationContext(configuration);
  }
 
