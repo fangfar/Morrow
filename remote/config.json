@@ -10,15 +10,15 @@
     }
   ],
   "android": {
-    "versionCode": 21,
-    "versionName": "3.0.0",
+    "versionCode": 22,
+    "versionName": "3.1.0",
     "forcePrompt": false,
     "promptTitle": "",
     "promptMessage": "",
-    "changelog": "优化课程小组件与课程添加，支持为同一课程设置多个上课时段。\n优化快递通知、取件操作和图片识别流程。\n图片识别改为安装可选 OCR 插件，按需使用。\n修复任务倒计时和课表布局问题。",
-    "apkUrl": "https://github.com/fangfar/Morrow/releases/download/v3.0.0/Morrow-3.0.0-lite.apk",
-    "liteApkUrl": "https://github.com/fangfar/Morrow/releases/download/v3.0.0/Morrow-3.0.0-lite.apk",
-    "fullApkUrl": "https://github.com/fangfar/Morrow/releases/download/v3.0.0/Morrow-3.0.0-lite.apk",
+    "changelog": "新增 AI 对话助手，支持自定义 API、项目与记忆管理。\n考试信息显示在课表时间轴上。\n支持学校网页课表导入和手动同步，保留本地修改。\n新增加密本地备份与恢复，优化主题和设置。\n统一为单个安装包，移除图片 OCR 功能及插件依赖。",
+    "apkUrl": "https://github.com/fangfar/Morrow/releases/download/v3.1.0/Morrow-3.1.0.apk",
+    "liteApkUrl": "https://github.com/fangfar/Morrow/releases/download/v3.1.0/Morrow-3.1.0.apk",
+    "fullApkUrl": "https://github.com/fangfar/Morrow/releases/download/v3.1.0/Morrow-3.1.0.apk",
     "diskUrl": "https://pan.baidu.com/s/5Q7q-93RIXFczWfL1i3cvQg"
   },
   "repositoryUrl": "https://github.com/fangfar/Morrow"
