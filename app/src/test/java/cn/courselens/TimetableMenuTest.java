@@ -36,7 +36,7 @@ public class TimetableMenuTest {
   }
  }
  private void readable(View view){
-  if(view instanceof TextView){TextView text=(TextView)view;assertNotNull(text.getLayout());assertTrue(text.getLayout().getHeight()<=text.getHeight()-text.getCompoundPaddingTop()-text.getCompoundPaddingBottom()+1);assertTrue(text.getHeight()>=48*text.getResources().getDisplayMetrics().density);}
+  if(view instanceof TextView){TextView text=(TextView)view;assertNotNull(text.getLayout());assertTrue("Clipped menu text: "+text.getText(),text.getLayout().getHeight()<=text.getHeight()-text.getCompoundPaddingTop()-text.getCompoundPaddingBottom()+1);assertTrue("Menu touch target is smaller than 48dp",text.getHeight()>=Math.round(48*text.getResources().getDisplayMetrics().density));}
   if(view instanceof ViewGroup){ViewGroup group=(ViewGroup)view;for(int i=0;i<group.getChildCount();i++)readable(group.getChildAt(i));}
  }
  private void layout(View view){android.util.DisplayMetrics dm=view.getResources().getDisplayMetrics();view.measure(View.MeasureSpec.makeMeasureSpec(dm.widthPixels,View.MeasureSpec.EXACTLY),View.MeasureSpec.makeMeasureSpec(dm.heightPixels,View.MeasureSpec.EXACTLY));view.layout(0,0,dm.widthPixels,dm.heightPixels);}
