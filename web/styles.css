@@ -201,7 +201,7 @@
     .intro p{margin-bottom:14px}
     .btn-cta,.btn-download{display:inline-flex;align-items:center;justify-content:center;min-height:48px}
     footer{margin-top:64px;display:block;line-height:1.8}
-    footer span{display:block;margin-bottom:12px}
+    footer > span{display:block;margin-bottom:12px}
   }
   .claim{font-size:1.5rem;line-height:1.55;margin-bottom:20px}
   .facts{line-height:1.8}
@@ -235,3 +235,18 @@
   .download-feedback{position:fixed;bottom:calc(20px + env(safe-area-inset-bottom,0px));left:50%;transform:translateX(-50%);z-index:25;width:min(40rem,calc(100% - 40px));padding:20px;background:var(--paper);color:var(--ink);border:1px solid var(--underline);border-radius:12px}
   .download-feedback p{margin:0 0 12px}
   .download-feedback button{font:inherit;min-height:44px;margin-left:16px;color:var(--ink);background:transparent;border:0;cursor:pointer;text-decoration:underline}
+
+  .support-info{margin-top:64px}
+  .support-info details{overflow:hidden}
+  .support-info summary{
+    display:flex;align-items:center;justify-content:space-between;gap:20px;
+    min-height:64px;cursor:pointer;list-style:none;border-top:1px solid var(--hairline);
+  }
+  .support-info summary::-webkit-details-marker{display:none}
+  .support-info summary:focus-visible{outline:2px solid var(--ink);outline-offset:-3px}
+  .support-info summary h2{font-size:1.125rem;margin:0}
+  .support-info summary svg{width:20px;height:20px;flex:none;fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;transition:transform 200ms cubic-bezier(0.23,1,0.32,1)}
+  .support-info details[data-expanded="true"] summary svg,.support-info details:not([data-expanded])[open] summary svg{transform:rotate(180deg)}
+  .disclosure-content{padding:8px 0 24px}
+  .disclosure-content > :last-child{margin-bottom:0}
+  @media (prefers-reduced-motion:reduce){.support-info summary svg{transition:none}}

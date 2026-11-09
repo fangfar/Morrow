@@ -17,6 +17,7 @@ class SiteParser(HTMLParser):
         self.links = []
         self.downloads = {}
         self.heading_count = 0
+        self.disclosures = []
 
     def handle_starttag(self, tag, attrs):
         attrs = dict(attrs)
@@ -25,6 +26,9 @@ class SiteParser(HTMLParser):
             self.ids.add(attrs['id'])
         if 'data-download' in attrs:
             self.downloads[attrs['data-download']] = attrs.get('class', '').split()
+        if tag == 'details':
+            self.disclosures.append(attrs['id'])
+            assert 'open' not in attrs, 'Supplementary information starts collapsed'
         self.heading_count += tag == 'h1'
         if tag == 'img':
             assert 'alt' in attrs, 'Image needs an alt attribute'
@@ -42,6 +46,8 @@ page = SiteParser()
 page.feed(html)
 page.close()
 assert page.heading_count == 1, 'Site needs one primary heading'
+assert page.disclosures == ['changelog', 'privacy'], 'Supplementary information belongs at the bottom'
+assert html.index('id="download"') < html.index('id="changelog"') < html.index('id="privacy"') < html.index('</main>')
 assert 'button' in page.downloads['lite'] and 'secondary' not in page.downloads['lite'], 'Download needs the primary button'
 for link in page.links:
     uri = urlsplit(link)
@@ -59,6 +65,7 @@ print(f'Website checks passed: {len(page.links)} links and resources')
 with tempfile.TemporaryDirectory() as directory:
     subprocess.run([sys.executable, str(ROOT / 'build.py'), directory], check=True)
     generated = (Path(directory) / 'index.html').read_text(encoding='utf-8')
+    assert (Path(directory) / 'disclosures.js').is_file(), 'Ship the disclosure controller'
     config = json.loads((Path(directory) / 'remote/config.json').read_text(encoding='utf-8'))
     for edition in ('lite',):
         assert f'data-download="{edition}" href="{config["android"][edition + "ApkUrl"]}"' in generated, f'{edition} must link directly to its APK without JavaScript'

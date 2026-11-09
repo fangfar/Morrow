@@ -87,3 +87,4 @@ const click = () => ({ preventDefault() { this.prevented = true; }, button: 0 })
 })().catch(error => { console.error(error); process.exitCode = 1; });
 
 require('./WebsiteThemeChecks.cjs');
+require('./WebsiteDisclosureChecks.cjs');
