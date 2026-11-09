@@ -8,7 +8,7 @@
 
 <title>Morrow · 课表、任务与快递</title>
 
-<link rel="stylesheet" href="styles.css?v=balanced-width">
+<link rel="stylesheet" href="styles.css?v=coordinated-layout">
 <script src="theme.js?v=1"></script>
 <script src="download.js" defer></script>
 <script src="disclosures.js?v=1" defer></script>
@@ -30,34 +30,46 @@
 
   <main id="main" tabindex="-1">
     <div class="intro">
+      <div class="intro-copy">
       <h1>Morrow</h1>
       <p class="claim">课表、任务与快递，一个应用装下。</p>
       <p>Morrow 是 Android 校园助手。按周查看课程，管理作业和取件码，还能让内置的 AI 助手帮你理一理明天的安排。</p>
       <p class="facts">当前版本 3.1.1 · Android 8.0 及以上 · 一个安装包 · 无需插件 · 数据保存在本机</p>
       <p class="dl-row"><a class="btn-download" href="#download">下载安卓版</a></p>
+      </div>
+      <figure class="intro-preview" aria-hidden="true"><img src="assets/text-de228b5aec.webp" width="498" height="1026" alt=""></figure>
     </div>
 
     <section id="features">
       <h2>功能</h2>
       <p>从上课到交作业、取快递，再到换手机时的数据备份，都在一个应用里。</p>
 
+      <div class="feature-grid">
+        <article>
       <h3>AI 助手</h3>
       <p>内置 AI 对话，支持自定义 API、项目与记忆管理。它读得懂你的课表与待办：问一句「明天有什么安排」，它会把课程和快截止的作业一起理出来，还会提醒哪两门课撞了时间。</p>
-
+        </article>
+        <article>
       <h3>周课表</h3>
       <p>左右滑动切周，支持多份课表、单次调课、停课与冲突课程选择，考试信息显示在课表时间轴上。宿迁学院、徐州工程学院可学校导入，其他学校可网页导入或手动添加；重新同步会保留你本地新增、修改、删除的课程和单次调整。</p>
-
+        </article>
+        <article>
       <h3>任务</h3>
       <p>手动添加任务，或连接学习通同步作业，按课程分组显示截止时间；支持本地编辑、自动刷新，误删的任务可以恢复。</p>
-
+        </article>
+        <article>
       <h3>快递</h3>
       <p>手动添加、粘贴取件文字，或开启通知识别自动收集取件码；提供官方身份码入口与取件提醒。物流记录只展示本机已有内容，不自动实时更新。</p>
-
+        </article>
+        <article>
       <h3>桌面小组件</h3>
       <p>在桌面查看课程与待取快递，支持多种尺寸。已导入的课表可以离线查看，没网也不耽误看课。</p>
-
+        </article>
+        <article>
       <h3>加密备份</h3>
       <p>在「设置 → 数据管理」导出或导入本地加密备份，用密码加密、不经过服务器。换手机或卸载前先导出一份，数据就能完整带走。</p>
+        </article>
+      </div>
     </section>
 
     <section id="showcase">
@@ -102,11 +114,15 @@
     </section>
 
     <section id="download">
+      <div class="download-copy">
       <h2>下载</h2>
       <p>一个安装包，包含课表、任务、快递、桌面小组件和 AI 助手。</p>
       <p>当前版本 3.1.1 · Android 8.0 及以上。覆盖安装即可更新，不用先卸载。更新记录与校验文件见 GitHub Releases。</p>
+      </div>
+      <div class="download-actions">
       <p class="dl-row"><a class="button btn-download" data-download="lite" href="https://github.com/fangfar/Morrow/releases/latest">下载安卓版</a></p>
       <p><a href="https://github.com/fangfar/Morrow">GitHub 仓库</a></p>
+      </div>
     </section>
 
     <section class="support-info" aria-label="补充说明">

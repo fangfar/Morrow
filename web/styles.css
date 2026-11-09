@@ -1,4 +1,5 @@
 
+
   :root{
     --paper:#FAF6EF;
     --ink:#3B3833;
@@ -250,3 +251,36 @@
   .disclosure-content{padding:8px 0 24px}
   .disclosure-content > :last-child{margin-bottom:0}
   @media (prefers-reduced-motion:reduce){.support-info summary svg{transition:none}}
+
+
+/* 统一内容边界，让已有内容形成宽屏分栏。 */
+.page{max-width:76rem;padding-inline:48px}
+main > section,.intro{max-width:none;margin-inline:0}
+@media (max-width:900px){.page{max-width:54rem;padding-inline:28px}}
+@media (max-width:560px){.page{padding-inline:max(20px,env(safe-area-inset-left,0px)) max(20px,env(safe-area-inset-right,0px))}}
+
+.intro{display:grid;grid-template-columns:minmax(0,1fr) 280px;gap:96px;align-items:center;margin-top:56px}
+.intro-copy{max-width:42rem;min-width:0}
+.intro-preview{margin:0;justify-self:center}
+.intro-preview img{display:block;width:260px;max-width:100%;height:auto}
+.feature-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:36px 64px;margin-top:36px}
+.feature-grid article{min-width:0}
+.feature-grid h3{margin:0 0 12px}
+.feature-grid p{margin:0}
+#features > p{max-width:44rem}
+#showcase{gap:40px 64px}
+.steps{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:24px 64px}
+.steps li{margin-bottom:0}
+#download{display:grid;grid-template-columns:minmax(0,1fr) 260px;gap:64px;align-items:center}
+.download-copy{max-width:42rem}
+.download-actions .btn-download{width:100%;text-align:center}
+.download-actions .dl-row{margin-top:0}
+.download-actions > p:last-child{margin:0;text-align:center}
+.support-info{margin-top:72px}
+@media (max-width:1100px){.intro{gap:56px}.intro-preview img{width:240px}}
+@media (max-width:900px){
+ .intro{display:block;margin-top:44px}.intro-copy{max-width:none}.intro-preview{display:none}
+ #download{display:block}.download-actions{margin-top:24px;max-width:320px}.download-actions > p:last-child{text-align:left}
+}
+@media (max-width:760px){.feature-grid,.steps{grid-template-columns:minmax(0,1fr);gap:28px}.feature-grid{margin-top:28px}#showcase{column-gap:32px}}
+@media (max-width:560px){.intro{margin-top:36px}.download-actions{max-width:none}.support-info{margin-top:60px}}
