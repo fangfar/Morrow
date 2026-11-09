@@ -85,3 +85,5 @@ const click = () => ({ preventDefault() { this.prevented = true; }, button: 0 })
   assert.equal(waiting.navigations.length, 1);
   console.log('Website download checks passed');
 })().catch(error => { console.error(error); process.exitCode = 1; });
+
+require('./WebsiteThemeChecks.cjs');
