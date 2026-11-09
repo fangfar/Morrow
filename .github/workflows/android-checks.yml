@@ -2,7 +2,7 @@ name: Android checks
 
 on:
   push:
-    branches: [main]
+    branches: [main, 'codex/website-*']
   pull_request:
     branches: [main]
   workflow_dispatch:
