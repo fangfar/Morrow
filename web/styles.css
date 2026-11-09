@@ -146,7 +146,7 @@
   }
   html{scroll-padding-top:var(--nav-height);scrollbar-color:var(--underline) var(--paper);-webkit-text-size-adjust:100%}
   body{line-height:1.85;overflow-wrap:anywhere}
-  .page{max-width:64rem;padding-inline:max(32px,env(safe-area-inset-left,0px)) max(32px,env(safe-area-inset-right,0px))}
+  .page{max-width:54rem;padding-inline:max(32px,env(safe-area-inset-left,0px)) max(32px,env(safe-area-inset-right,0px))}
   .site-head{
     position:sticky;top:0;z-index:20;display:flex;align-items:center;
     gap:12px;flex-wrap:wrap;padding:12px 0;
@@ -165,8 +165,8 @@
   a,button{touch-action:manipulation}
   .site-nav a:active,.theme-toggle:active{background:var(--hairline)}
   .btn-cta:active,.btn-download:active{opacity:.8}
-  .intro{max-width:40rem;margin-top:80px}
-  section{max-width:40rem;margin-top:88px}
+  .intro{max-width:42rem;margin-top:80px;margin-inline:auto}
+  section{max-width:42rem;margin-top:88px;margin-inline:auto}
   h1{font-size:clamp(2.25rem,5vw,3.5rem);line-height:1.2;margin-bottom:24px}
   h2{font-size:1.75rem;line-height:1.4;margin-bottom:24px}
   h3{font-size:1.25rem;line-height:1.5;margin:36px 0 12px}
@@ -205,7 +205,7 @@
   }
   .claim{font-size:1.5rem;line-height:1.55;margin-bottom:20px}
   .facts{line-height:1.8}
-  #showcase{max-width:none;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:40px 64px}
+  #showcase{max-width:none;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:40px 48px}
   #showcase > h2,#showcase > p{grid-column:1 / -1;margin:0;max-width:40rem}
   #showcase > p{margin-top:-24px}
   #showcase figure{min-width:0;margin:0;display:grid;grid-template-rows:auto 1fr auto;align-items:start}
