@@ -343,7 +343,9 @@ figcaption {
   justify-content:space-between;
   gap:16px;
   padding:24px 0;
-  font-size:14px;
+  font-size:12px;
+  letter-spacing:.2em;
+  text-transform:uppercase;
   border-bottom:1px solid var(--line);
   transition:border-color .5s;
 }
@@ -664,9 +666,6 @@ details strong {
   .hero,.intro-grid,.download-inner {
     gap:48px;
   }
-  .hero {
-    grid-template-columns:minmax(0,1fr) minmax(0,1fr);
-  }
   .hero h1 {
     font-size:48px;
   }
@@ -684,7 +683,7 @@ details strong {
   }
 }
 
-@media(max-width:700px) {
+@media(max-width:760px) {
   html {
     scroll-padding-top:88px;
   }
@@ -778,7 +777,7 @@ details strong {
   }
   .daily .section-copy {
     min-height:0;
-    margin-bottom:36px;
+    margin-bottom:32px;
   }
   .daily-feature:nth-child(2) {
     padding-top:0;
