@@ -41,7 +41,7 @@ class SiteParser(HTMLParser):
 html = (ROOT / 'index.html').read_text(encoding='utf-8')
 assert html.count('data-download="lite"') == 1 and 'data-download="full"' not in html
 assert '下载安卓版' in html
-assert html.count('href="https://github.com/fangfar/Morrow"') == 2
+assert 'href="https://github.com/fangfar/Morrow"' in html
 page = SiteParser()
 page.feed(html)
 page.close()

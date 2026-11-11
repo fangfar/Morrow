@@ -19,7 +19,7 @@
         }
       }
     } while (releases.length === 100);
-    display.textContent = `GitHub 累计下载 ${total.toLocaleString('zh-CN')} 次`;
+    display.textContent = `累计下载 ${total.toLocaleString('zh-CN')} 次`;
     display.hidden = false;
   }
 

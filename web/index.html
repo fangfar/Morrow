@@ -11,7 +11,7 @@
 <link rel="stylesheet" href="styles.css?v=coordinated-layout">
 <script src="theme.js?v=1"></script>
 <script src="download.js?v=stay" defer></script>
-<script src="download-count.js" defer></script>
+<script src="download-count.js?v=2" defer></script>
 <script src="disclosures.js?v=1" defer></script>
 <link rel="canonical" href="https://morrow.xvyan.cn/">
 <link rel="icon" type="image/webp" href="assets/courselens-icon.webp">
@@ -35,7 +35,7 @@
       <h1>Morrow</h1>
       <p class="claim">课表、任务与快递，一个应用装下。</p>
       <p>Morrow 是 Android 校园助手。按周查看课程，管理作业和取件码，还能让内置的 AI 助手帮你理一理明天的安排。</p>
-      <p class="facts">当前版本 3.1.1 · Android 8.0 及以上 · 一个安装包 · 无需插件 · 数据保存在本机</p>
+      <p class="facts">数据保存在本机</p>
       <p class="dl-row"><a class="btn-download" href="#download">下载安卓版</a></p>
       </div>
       <figure class="intro-preview" aria-hidden="true"><img src="assets/text-de228b5aec.webp" width="498" height="1026" alt=""></figure>
@@ -48,7 +48,7 @@
       <div class="feature-grid">
         <article>
       <h3>AI 助手</h3>
-      <p>内置 AI 对话，支持自定义 API、项目与记忆管理。它读得懂你的课表与待办：问一句「明天有什么安排」，它会把课程和快截止的作业一起理出来，还会提醒哪两门课撞了时间。</p>
+      <p>内置 AI 对话，支持自定义服务、项目与记忆管理。它可以结合课表和待办，帮你整理日程。</p>
         </article>
         <article>
       <h3>周课表</h3>
@@ -64,11 +64,11 @@
         </article>
         <article>
       <h3>桌面小组件</h3>
-      <p>在桌面查看课程与待取快递，支持多种尺寸。已导入的课表可以离线查看，没网也不耽误看课。</p>
+      <p>在桌面查看课程与待取快递，支持多种尺寸。已导入的课表支持离线查看。</p>
         </article>
         <article>
       <h3>加密备份</h3>
-      <p>在「设置 → 数据管理」导出或导入本地加密备份，用密码加密、不经过服务器。换手机或卸载前先导出一份，数据就能完整带走。</p>
+      <p>支持加密备份，方便换手机时恢复数据。</p>
         </article>
       </div>
     </section>
@@ -79,19 +79,19 @@
 
       <figure>
         <h3>周课表</h3>
-        <p>一周课程一屏看清：左右滑动切周，考试信息直接显示在课表时间轴上，时间重叠的课程会标出冲突，选哪一节由你决定。</p>
+        <p>一周课程与考试安排，一屏看清。</p>
         <img src="assets/text-de228b5aec.webp" width="498" height="1026" alt="Morrow 周课表一周视图，不同课程以色块区分，并标出冲突课程，使用示例数据。">
       </figure>
 
       <figure>
         <h3>任务</h3>
-        <p>最近截止的作业置顶并给出倒计时，其余按课程分组、标明截止时间。手动添加，或连接学习通自动同步，都不会漏。</p>
+        <p>最近截止的作业置顶，并显示倒计时。</p>
         <img src="assets/text-2233c7e738.webp" width="498" height="1026" alt="Morrow 任务页，顶部是最近截止任务的倒计时，下方按课程分组显示作业与截止时间，使用示例数据。">
       </figure>
 
       <figure>
         <h3>快递</h3>
-        <p>取件码用大字摆在明处，到驿站不用翻短信。淘宝、菜鸟、拼多多的官方身份码入口也在同一页，点开就能用。</p>
+        <p>取件码用大字摆在明处，到驿站不用翻短信。</p>
         <img src="assets/text-4b06889b46.webp" width="720" height="1483" alt="Morrow 快递页，顶部是淘宝、菜鸟、拼多多身份码入口，下方以大字显示取件码，使用示例数据。">
       </figure>
 
@@ -106,10 +106,10 @@
       <h2>使用指南</h2>
       <ol class="steps">
         <li><strong>创建课表。</strong>课表页右上角菜单 → 新增课表，选择手动创建、学校导入或网页导入；从“切换课表”使用已有课表。</li>
-        <li><strong>核对安排。</strong>侧栏 → 设置 → 开学日期；课表页右上角菜单 → 作息时间。导入后核对课程、周次和地点；重新同步会保留本地新增、修改和删除的课程及单次调整，来源变更无法可靠合并时会停止写入并提示。</li>
-        <li><strong>添加小组件。</strong>侧栏 → 设置 → 桌面小组件，或从桌面的小组件列表选择 Morrow。实际尺寸和刷新时机取决于系统及启动器。</li>
-        <li><strong>管理任务。</strong>任务页右上角加号添加；同步状态可刷新学习通作业，更多菜单提供账号、课程、自动刷新与任务恢复。</li>
-        <li><strong>管理快递。</strong>“读取信息”可粘贴取件文字，核对后保存；也可手动添加。通知识别在快递设置中开启。</li>
+        <li><strong>核对安排。</strong>侧栏 → 设置 → 开学日期；课表页右上角菜单 → 作息时间。导入后核对课程、周次和地点；同步遇到无法处理的变更时会提示。</li>
+        <li><strong>添加小组件。</strong>侧栏 → 设置 → 桌面小组件，或从桌面的小组件列表选择 Morrow。</li>
+        <li><strong>管理任务。</strong>任务页右上角加号可添加任务，也可以连接学习通同步作业。</li>
+        <li><strong>管理快递。</strong>粘贴取件文字或手动添加；也可在快递设置中开启通知识别。</li>
         <li><strong>备份数据。</strong>侧栏 → 设置 → 数据管理，可导出或导入本地加密备份。更换手机、卸载或清空应用数据前，请先导出备份。</li>
       </ol>
     </section>
@@ -117,12 +117,10 @@
     <section id="download">
       <div class="download-copy">
       <h2>下载</h2>
-      <p>一个安装包，包含课表、任务、快递、桌面小组件和 AI 助手。</p>
-      <p>当前版本 3.1.1 · Android 8.0 及以上。覆盖安装即可更新，不用先卸载。更新记录与校验文件见 GitHub Releases。</p>
+      <p>当前版本 3.1.1 · Android 8.0 及以上</p>
       </div>
       <div class="download-actions">
       <p class="dl-row"><a class="button btn-download" data-download="lite" href="https://github.com/fangfar/Morrow/releases/latest">下载安卓版</a></p>
-      <p><a href="https://github.com/fangfar/Morrow">GitHub 仓库</a></p>
       <p class="facts" data-download-count hidden></p>
       </div>
     </section>
@@ -133,22 +131,20 @@
         <div class="disclosure-content">
           <p class="facts">版本 3.1.1</p>
           <ul class="log-list">
-            <li>统一竖屏手机页面显示比例，改善不同屏幕密度下的界面一致性。</li>
-            <li>修复部分按钮自动缩放时尺寸异常。</li>
+            <li>优化不同手机上的显示效果与按钮尺寸。</li>
             <li>未配置 AI 服务时引导进入 API 设置。</li>
-            <li>更新官网布局及下载按钮样式。</li>
           </ul>
         </div>
       </details>
       <details id="privacy">
         <summary><h2>数据与隐私</h2><svg viewBox="0 0 20 20" aria-hidden="true"><path d="m5 8 5 5 5-5"/></svg></summary>
         <div class="disclosure-content">
-          <p>课表、任务和快递数据保存在本机。学校与学习通账号密码在验证成功后使用 Android Keystore 加密保存，用于对应平台的验证与刷新。同步失败保留已有数据。</p>
+          <p>课表、任务和快递数据保存在本机。学校与学习通账号密码在验证成功后加密保存在本机，用于对应平台的验证与刷新。同步失败保留已有数据。</p>
           <p>通知识别默认关闭，需要应用内同意和系统授权；只解析选定来源，不保存通知全文，不读取短信数据库。桌面显示取件码需单独开启。</p>
           <p>发送的 AI 消息及所选附件会交给配置的服务商处理，请在发送前确认内容。AI 给出的课程和任务建议请核对；数据变更需确认后执行。</p>
-          <p>AI 对话使用你自行配置的 API。加密备份不包含账号密码、API 配置与密钥、AI 聊天、网页登录状态和系统授权。</p>
-          <p>公告和更新服务不接收课表、账号或密码。徐州工程学院当前教务入口使用 HTTP；密码按学校协议加密，但账号、课表和会话传输不受 HTTPS 保护，请在可信网络中同步。</p>
-          <p>课表不会通过系统备份自动迁移。请在「设置 → 数据管理」导出本地加密备份：备份用密码加密、不经过服务器，请妥善保管文件与密码，密码丢失无法找回。</p>
+          <p>AI 对话使用你自行配置的服务。加密备份不包含账号密码、AI 服务配置与密钥、AI 聊天、网页登录状态和系统授权。</p>
+          <p>公告和更新服务不接收课表、账号或密码。徐州工程学院的教务入口未加密连接；密码按学校协议加密，但账号、课表和登录状态在传输中仍有风险，请在可信网络中同步。</p>
+          <p>课表不会通过系统备份自动迁移。请在「设置 → 数据管理」导出本地加密备份：请妥善保管备份文件与密码，密码丢失无法找回。</p>
           <p><a href="https://github.com/fangfar/Morrow#数据与隐私">完整隐私说明</a></p>
         </div>
       </details>

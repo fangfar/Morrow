@@ -26,7 +26,7 @@ async function run(pages) {
   first[0] = release([asset('Morrow-3.1.1.apk', 9), asset('Morrow-OCR-1.0.1.apk', 4)]);
   const result = await run([first, [release([asset('CourseLens-2.7.4-vc16.apk', 6)]), { prerelease: true, assets: [asset('Morrow-4.0.apk', 99)] }]]);
   assert.equal(result.calls, 2);
-  assert.equal(result.display.textContent, 'GitHub 累计下载 15 次');
+  assert.equal(result.display.textContent, '累计下载 15 次');
   assert.equal(result.display.hidden, false);
   assert.equal((await run([new Error('offline')])).display.hidden, true);
   console.log('Website download count checks passed');
