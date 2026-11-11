@@ -30,6 +30,7 @@ jobs:
         run: |
           python3 tests/WebsiteChecks.py
           node tests/WebsiteDownloadChecks.cjs
+          node tests/WebsiteDownloadCountChecks.cjs
       - name: Prepare site
         if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
         run: python3 web/build.py site
